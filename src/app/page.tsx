@@ -1,13 +1,13 @@
 
 "use client";
-import { useEffect } from 'react';
+// import { useEffect } from 'react'; // No longer needed for DialogflowContext
 import Link from 'next/link';
 import Image from 'next/image';
 import { MessageSquareText, NotebookPen, CalendarDays, ArrowRight } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import MentoraHeader from '@/components/mentora/Header';
-import { useDialogflow } from '@/contexts/DialogflowContext';
+// import { useDialogflow } from '@/contexts/DialogflowContext'; // Removed
 
 const cardData = [
   {
@@ -38,11 +38,11 @@ const benefits = [
 ];
 
 export default function HomePage() {
-  const { setConfig } = useDialogflow();
+  // const { setConfig } = useDialogflow(); // Removed
 
-  useEffect(() => {
-    setConfig(null); // No chatbot on the homepage
-  }, [setConfig]);
+  // useEffect(() => { // Removed
+  //   setConfig(null); // No chatbot on the homepage
+  // }, [setConfig]);
 
   return (
     <>
@@ -57,7 +57,7 @@ export default function HomePage() {
           <h2 className="text-3xl font-bold text-center mb-8 font-headline text-primary-foreground">Explore Mentora Hub</h2>
           <div className="grid md:grid-cols-3 gap-8">
             {cardData.map((card) => (
-              <Link href={card.href} key={card.title}>
+              <Link href={card.href} key={card.title} legacyBehavior={false} passHref={false}>
                 <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col bg-card hover:border-accent">
                   <CardHeader>
                     <div className="flex justify-center mb-4">
@@ -105,7 +105,7 @@ export default function HomePage() {
           <p className="text-lg text-foreground/90 mb-6">
             Dive into Mentora Hub and discover how we can support your journey.
           </p>
-          <Link href="/mental-health">
+          <Link href="/mental-health" legacyBehavior={false} passHref={false}>
             <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
               Get Started with Mental Health Support
             </Button>

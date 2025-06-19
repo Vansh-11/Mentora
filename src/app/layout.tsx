@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import MentoraHeader from '@/components/mentora/Header';
+// import MentoraHeader from '@/components/mentora/Header'; // Header is per-page
 import MentoraFooter from '@/components/mentora/Footer';
-import { DialogflowProvider } from '@/contexts/DialogflowContext';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
@@ -24,14 +23,12 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased flex flex-col min-h-screen">
-        <DialogflowProvider>
           {/* Header is rendered per-page for more flexibility with props */}
           <main className="flex-grow">
             {children}
           </main>
           <MentoraFooter />
           <Toaster />
-        </DialogflowProvider>
       </body>
     </html>
   );

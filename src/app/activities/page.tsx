@@ -1,94 +1,257 @@
 
 "use client";
-import { useEffect } from 'react';
+
+import React, { useEffect, useState, useRef } from 'react';
+import Header from '@/components/mentora/Header';
+import Footer from '@/components/mentora/Footer';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import MentoraHeader from '@/components/mentora/Header';
-import { useDialogflow, type DialogflowConfig } from '@/contexts/DialogflowContext';
-import { MessageSquareHeart, Sparkles, ChevronRight, CalendarCheck2 } from 'lucide-react';
+import { Sparkles, ChevronRight, MessageSquareHeart, MessageCircle } from 'lucide-react';
 
-const pageConfig: DialogflowConfig = {
-  agentId: '75e34229-81d6-48dc-a566-837752d63132',
-  intent: 'WELCOME',
-  chatTitle: 'Activities Assistant',
-};
-
-const exampleQuestions = [
-  "What's happening this week at school?",
-  "Tell me about the upcoming science fair.",
-  "Are there any sports events on Saturday?",
-  "How can I join the debate club?",
-  "When is the next school holiday?",
-];
+const ACTIVITIES_AGENT_ID = "75e34229-81d6-48dc-a566-837752d63132";
+const DIALOGFLOW_SCRIPT_URL = "https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1";
+const DF_SCRIPT_ID = "dialogflow-bootstrap-script-activities"; 
 
 export default function ActivitiesPage() {
-  const { setConfig, openChat, isScriptLoaded, isChatConfigured } = useDialogflow();
+  const [isClient, setIsClient] = useState(false);
+  const [renderMessenger, setRenderMessenger] = useState(false);
+  const messengerRef = useRef<HTMLElement | null>(null);
+  const [isMessengerComponentReady, setIsMessengerComponentReady] = useState(false);
+
 
   useEffect(() => {
-    setConfig(pageConfig);
-  }, [setConfig]);
-  
-  const handleOpenChat = () => {
-    if (isScriptLoaded && isChatConfigured) {
-      openChat();
-    } else if (isScriptLoaded && !isChatConfigured) {
-      setConfig(pageConfig);
-      setTimeout(openChat, 100);
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+
+    const messengerSelector = `df-messenger[agent-id="${ACTIVITIES_AGENT_ID}"]`;
+    
+    const handleMessengerLoaded = () => {
+      console.log(`ActivitiesPage: df-messenger-loaded event received for agent ${ACTIVITIES_AGENT_ID}.`);
+      setIsMessengerComponentReady(true);
+    };
+    
+    const messengerElement = document.querySelector(messengerSelector);
+    if (messengerElement) {
+      messengerElement.addEventListener('df-messenger-loaded', handleMessengerLoaded);
+      messengerRef.current = messengerElement as HTMLElement;
+    }
+
+
+    const loadAndInitializeMessenger = () => {
+      if (document.querySelector(messengerSelector)) {
+        console.log("ActivitiesPage: Dialogflow Messenger for this agent already in DOM.");
+        messengerRef.current = document.querySelector(messengerSelector);
+        if (messengerRef.current) {
+            messengerRef.current.addEventListener('df-messenger-loaded', handleMessengerLoaded);
+        }
+        setRenderMessenger(true);
+        return;
+      }
+
+      if ((window as any).dfMessengerBootstrapLoaded) {
+        console.log("ActivitiesPage: Dialogflow bootstrap script already loaded globally.");
+        setRenderMessenger(true);
+        return;
+      }
+      
+      let script = document.getElementById(DF_SCRIPT_ID) as HTMLScriptElement | null;
+      if (!script) {
+        script = document.createElement('script');
+        script.id = DF_SCRIPT_ID;
+        script.src = DIALOGFLOW_SCRIPT_URL;
+        script.async = true;
+        document.head.appendChild(script);
+        script.onload = () => {
+          console.log("ActivitiesPage: Dialogflow bootstrap.js loaded.");
+          (window as any).dfMessengerBootstrapLoaded = true; 
+          setRenderMessenger(true);
+        };
+        script.onerror = () => {
+          console.error("ActivitiesPage: Failed to load Dialogflow bootstrap.js.");
+        };
+      } else {
+        const handleExistingScriptLoad = () => {
+          if (!(window as any).dfMessengerBootstrapLoaded) {
+            console.log("ActivitiesPage: Dialogflow bootstrap.js (existing tag) loaded.");
+            (window as any).dfMessengerBootstrapLoaded = true;
+          }
+          setRenderMessenger(true);
+        };
+
+        if ((window as any).dfMessengerBootstrapLoaded) { 
+            handleExistingScriptLoad();
+        } else {
+            script.addEventListener('load', handleExistingScriptLoad);
+            script.addEventListener('error', () => console.error("ActivitiesPage: Failed to load Dialogflow bootstrap.js (existing tag)."));
+        }
+      }
+    };
+
+    loadAndInitializeMessenger();
+
+    return () => {
+      const existingMessenger = document.querySelector(messengerSelector);
+      if (existingMessenger) {
+        console.log("ActivitiesPage: Removing Dialogflow Messenger for this agent on unmount.");
+        existingMessenger.removeEventListener('df-messenger-loaded', handleMessengerLoaded);
+        existingMessenger.remove();
+      }
+      setRenderMessenger(false); 
+      setIsMessengerComponentReady(false);
+      messengerRef.current = null;
+    };
+  }, [isClient]);
+
+  useEffect(() => {
+    if (!renderMessenger || !isClient) return;
+
+    const dfMessengerElement = document.querySelector(`df-messenger[agent-id="${ACTIVITIES_AGENT_ID}"]`);
+    const handleDfMessengerLoadedEvent = () => {
+      console.log(`ActivitiesPage: df-messenger-loaded event received for agent ${ACTIVITIES_AGENT_ID} (useEffect).`);
+      setIsMessengerComponentReady(true);
+    };
+
+    if (dfMessengerElement) {
+      dfMessengerElement.addEventListener('df-messenger-loaded', handleDfMessengerLoadedEvent);
+      messengerRef.current = dfMessengerElement as HTMLElement;
+
+      if ((dfMessengerElement as any)._instance && (dfMessengerElement as any)._instance.dfMessengerLoaded) {
+          setIsMessengerComponentReady(true);
+      }
+    }
+    return () => {
+      if (dfMessengerElement) {
+        dfMessengerElement.removeEventListener('df-messenger-loaded', handleDfMessengerLoadedEvent);
+      }
+    };
+  }, [renderMessenger, isClient]);
+
+
+  const isChatVisiblyOpen = (): boolean => {
+    if (!isClient) return false;
+    const dfMessenger = document.querySelector(`df-messenger[agent-id="${ACTIVITIES_AGENT_ID}"]`) as HTMLElement | null;
+    if (!dfMessenger) return false;
+    const shadowRoot = dfMessenger.shadowRoot;
+    if (!shadowRoot) return false;
+    const chatWrapper = shadowRoot.querySelector('#dialogflow-chat-wrapper');
+    return chatWrapper ? getComputedStyle(chatWrapper).getPropertyValue('display') !== 'none' : false;
+  };
+
+  const openChatWidgetIfNotOpen = () => {
+    if (!isClient) {
+      console.warn('ActivitiesPage: Attempted to open chat before client hydration.');
+      return;
+    }
+    
+    const dfMessenger = document.querySelector(`df-messenger[agent-id="${ACTIVITIES_AGENT_ID}"]`) as any;
+
+    if (!dfMessenger) {
+      console.warn(`ActivitiesPage: df-messenger with agent-id ${ACTIVITIES_AGENT_ID} not found when trying to open.`);
+      return;
+    }
+    
+    if (!dfMessenger.shadowRoot) {
+        console.warn("ActivitiesPage: df-messenger shadowRoot NOT FOUND when trying to open. Attempting to wait for it.");
+        // Optionally, add a small delay and retry, or rely on isMessengerComponentReady
+        if (isMessengerComponentReady) {
+            const widgetIconRetry = dfMessenger.shadowRoot?.querySelector('#widgetIcon') as HTMLElement | null;
+            if (widgetIconRetry && !isChatVisiblyOpen()) {
+                widgetIconRetry.click();
+            }
+        }
+        return;
+    }
+    
+    const widgetIcon = dfMessenger.shadowRoot.querySelector('#widgetIcon') as HTMLElement | null;
+    
+    if (widgetIcon && !isChatVisiblyOpen()) {
+      console.log("ActivitiesPage: #widgetIcon FOUND. Clicking to open.");
+      widgetIcon.click();
+    } else if (isChatVisiblyOpen()) {
+      console.log("ActivitiesPage: Chat already open.");
+    } else {
+      console.warn("ActivitiesPage: #widgetIcon NOT FOUND in shadow DOM when trying to open. isMessengerComponentReady:", isMessengerComponentReady);
     }
   };
 
-  return (
-    <>
-      <MentoraHeader
-        title="🗓️ Activities Assistant"
-        subtitle="Your Guide to School Events and Extracurriculars"
-        description="Stay in the loop with all the happenings at school! Mentora's Activities Assistant can help you find information on events, clubs, sports, and important dates."
-      />
-      <div className="container mx-auto py-12 px-4 md:px-8">
-        <Card className="shadow-lg bg-card">
-          <CardHeader>
-            <div className="flex items-center space-x-2 mb-2">
-                <CalendarCheck2 className="h-8 w-8 text-accent" />
-                <CardTitle className="font-headline text-2xl text-primary-foreground">Discover What's Happening!</CardTitle>
-            </div>
-            <CardDescription>
-              Use the chat bot to ask about school activities, events, clubs, and more.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-8">
-            <div>
-              <div className="flex items-center text-lg font-semibold mb-2 text-primary-foreground">
-                <MessageSquareHeart className="h-6 w-6 text-accent mr-2" />
-                Welcome!
-              </div>
-              <p className="text-foreground/90">
-                Mentora is excited to help you explore all the activities your school has to offer. Whether you're looking for club meetings, sports schedules, or special events, just ask!
-              </p>
-            </div>
+  const handleAskButtonClick = () => {
+    openChatWidgetIfNotOpen();
+  };
 
-            <div>
-              <div className="flex items-center text-lg font-semibold mb-2 text-primary-foreground">
-                <Sparkles className="h-6 w-6 text-accent mr-2" />
-                Example Questions to Ask
-              </div>
-              <ul className="space-y-2 text-foreground/80">
-                {exampleQuestions.map((question, index) => (
-                  <li key={index} className="flex items-center">
-                    <ChevronRight className="h-5 w-5 text-accent mr-2 shrink-0" />
-                    <span>{question}</span>
+
+  return (
+    <div className="flex flex-col min-h-screen bg-background">
+      <Header
+        title="🗓️ Activities Assistant"
+        subtitle="Your Guide to School Events"
+        description="Learn how to ask the chatbot about upcoming and past school activities, and how to register for them."
+        showChatbotIcon={false} 
+        isHomePage={false}
+      />
+      <main className="flex-grow container mx-auto px-4 py-8 md:py-12">
+        <div className="flex justify-center">
+          <Card className="w-full max-w-2xl shadow-lg rounded-xl">
+            <CardHeader className="text-center items-center pt-6 pb-4">
+              <MessageSquareHeart size={36} className="text-primary-foreground mb-3" />
+              <CardTitle className="font-headline text-2xl text-primary-foreground">
+                Welcome to the Activities Assistant!
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-6 pb-6 md:px-8 md:pb-8 text-left">
+              <p className="text-foreground/90 mb-6 text-center md:text-left">
+                I can help you with details about past school events or guide you to register for upcoming ones. Just type things like:
+              </p>
+              
+              <div className="space-y-3 mb-6 p-4 bg-primary/10 rounded-lg border border-primary/30">
+                <h3 className="text-md font-semibold text-primary-foreground flex items-center mb-3">
+                  <Sparkles size={18} className="mr-2 text-accent flex-shrink-0" /> 
+                  Example Questions:
+                </h3>
+                <ul className="list-none space-y-2 text-foreground/80 pl-2">
+                  <li className="flex items-start">
+                    <ChevronRight size={16} className="mr-2 mt-1 text-accent flex-shrink-0" />
+                    <span>“List the events that already took place.”</span>
                   </li>
-                ))}
-              </ul>
-            </div>
-            
-            <div className="text-center pt-4">
-              <Button onClick={handleOpenChat} size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
-                Ask About Activities
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </>
+                  <li className="flex items-start">
+                    <ChevronRight size={16} className="mr-2 mt-1 text-accent flex-shrink-0" />
+                    <span>“Are there any activities lined up?”</span>
+                  </li>
+                </ul>
+              </div>
+
+              <p className="text-center text-lg text-foreground/90 mt-8 mb-6">
+                I’m here to make sure you never miss out on what’s happening at school! 😊
+              </p>
+
+              <div className="flex justify-center mt-8">
+                <Button 
+                  size="lg" 
+                  className="bg-accent hover:bg-accent/90 text-accent-foreground"
+                  onClick={handleAskButtonClick}
+                  aria-label="Ask about activities"
+                >
+                  <MessageCircle size={20} className="mr-2" />
+                  Ask About Activities
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+      <Footer />
+      {isClient && renderMessenger && (
+        <df-messenger
+          intent="WELCOME"
+          chat-title="Event"
+          agent-id={ACTIVITIES_AGENT_ID}
+          language-code="en"
+        >
+          <df-messenger-chat-bubble></df-messenger-chat-bubble>
+        </df-messenger>
+      )}
+    </div>
   );
 }

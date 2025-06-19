@@ -1,47 +1,71 @@
 
-import type React from 'react';
+import type { ReactNode } from 'react';
+import { BotMessageSquare, Home as HomeIcon } from 'lucide-react';
 import Link from 'next/link';
-import { Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 
 interface HeaderProps {
-  title: React.ReactNode;
-  subtitle?: React.ReactNode;
-  description?: React.ReactNode;
-  isHomePage?: boolean;
+  title?: ReactNode;
+  subtitle?: ReactNode;
+  description?: ReactNode;
+  showChatbotIcon?: boolean;
+  isHomePage?: boolean; // New prop
 }
 
-const MentoraHeader: React.FC<HeaderProps> = ({ title, subtitle, description, isHomePage = false }) => {
+export default function Header({
+  title = "👋 Welcome to Mentora Hub",
+  subtitle = "Your All-in-One Student Support Companion",
+  description = "Navigate through our services for mental well-being, academic assistance, and exploring your school environment. Mentora is here to help you thrive.",
+  showChatbotIcon = true,
+  isHomePage = false, // Default to false, meaning home button will show
+}: HeaderProps) {
+
+  const handleHomeClick = () => {
+    if (typeof window !== 'undefined') {
+      console.log("Header: Dispatching mentora:navigatingHome event.");
+      window.dispatchEvent(new CustomEvent('mentora:navigatingHome'));
+    }
+  };
+
   return (
-    <header className="bg-primary/10 py-8 px-4 md:px-8 shadow-sm">
-      <div className="container mx-auto">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex-1">
-            {typeof title === 'string' ? (
-              <h1 className="text-4xl font-headline font-bold text-primary-foreground">{title}</h1>
-            ) : (
-              title
-            )}
-          </div>
-          {!isHomePage && (
-            <Link href="/">
-              <Button variant="ghost" size="icon" aria-label="Go to Homepage">
-                <Home className="h-6 w-6 text-primary-foreground" />
+    <header className="py-12 md:py-16 bg-primary/30">
+      <div className="container mx-auto px-4 relative">
+        {!isHomePage && ( // Conditionally render Home button
+          <div className="absolute top-4 left-4 md:top-6 md:left-6 z-10">
+            <Link href="/" onClick={handleHomeClick}>
+              <Button variant="outline" size="icon" aria-label="Go to homepage" className="bg-card hover:bg-card/90">
+                <HomeIcon className="h-5 w-5 text-card-foreground" />
               </Button>
             </Link>
+          </div>
+        )}
+
+        <div className="text-center">
+          {showChatbotIcon && (
+            <div className="flex justify-center items-center mb-6">
+              <BotMessageSquare size={48} className="text-primary-foreground mr-3" />
+              <h1 className="text-3xl md:text-4xl font-headline font-bold text-primary-foreground">
+                {title}
+              </h1>
+            </div>
+          )}
+          {!showChatbotIcon && title && (
+             <h1 className="text-3xl md:text-4xl font-headline font-bold text-primary-foreground mb-6">
+                {title}
+              </h1>
+          )}
+          {subtitle && (
+            <p className="text-xl md:text-2xl text-primary-foreground/90 mb-4 font-headline">
+              {subtitle}
+            </p>
+          )}
+          {description && (
+            <p className="text-md md:text-lg text-foreground max-w-3xl mx-auto">
+              {description}
+            </p>
           )}
         </div>
-        {subtitle && (typeof subtitle === 'string' ? (
-          <p className="text-xl text-muted-foreground font-headline">{subtitle}</p>
-        ) : subtitle)}
-        <Separator className="my-4 bg-primary/20" />
-        {description && (typeof description === 'string' ? (
-          <p className="text-md text-foreground/80">{description}</p>
-        ) : description)}
       </div>
     </header>
   );
-};
-
-export default MentoraHeader;
+}

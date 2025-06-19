@@ -1,99 +1,259 @@
 
 "use client";
-import { useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import MentoraHeader from '@/components/mentora/Header';
-import { useDialogflow, type DialogflowConfig } from '@/contexts/DialogflowContext';
-import { Info, Sparkles, AlertTriangle, Lightbulb } from 'lucide-react';
 
-const pageConfig: DialogflowConfig = {
-  agentId: '20dce2b7-dfcf-491e-bee9-5d19f6c8837f',
-  intent: 'WELCOME',
-  chatTitle: 'Homework Helper',
-};
+import React, { useEffect, useState, useRef } from 'react';
+import Header from '@/components/mentora/Header';
+import Footer from '@/components/mentora/Footer';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Info, AlertTriangle, MessageSquareQuote, Sparkles, MessageCircle } from 'lucide-react';
+
+const HOMEWORK_AGENT_ID = "20dce2b7-dfcf-491e-bee9-5d19f6c8837f";
+const DIALOGFLOW_SCRIPT_URL = "https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1";
+const DF_SCRIPT_ID = "dialogflow-bootstrap-script-homework"; // Unique ID for this page's script
 
 export default function HomeworkHelpPage() {
-  const { setConfig, openChat, isScriptLoaded, isChatConfigured } = useDialogflow();
+  const [isClient, setIsClient] = useState(false);
+  const [renderMessenger, setRenderMessenger] = useState(false);
+  const [isMessengerComponentReady, setIsMessengerComponentReady] = useState(false);
+  const messengerRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    setConfig(pageConfig);
-  }, [setConfig]);
+    setIsClient(true);
+  }, []);
 
-  const handleOpenChat = () => {
-    if (isScriptLoaded && isChatConfigured) {
-      openChat();
-    } else if (isScriptLoaded && !isChatConfigured) {
-      setConfig(pageConfig);
-      setTimeout(openChat, 100); 
+  useEffect(() => {
+    if (!isClient) return;
+
+    const messengerSelector = `df-messenger[agent-id="${HOMEWORK_AGENT_ID}"]`;
+
+    const handleMessengerLoaded = () => {
+      console.log(`HomeworkHelpPage: df-messenger-loaded event received for agent ${HOMEWORK_AGENT_ID}.`);
+      setIsMessengerComponentReady(true);
+    };
+    
+    const messengerElement = document.querySelector(messengerSelector);
+    if (messengerElement) {
+      messengerElement.addEventListener('df-messenger-loaded', handleMessengerLoaded);
+      messengerRef.current = messengerElement as HTMLElement;
     }
+
+    const loadAndInitializeMessenger = () => {
+      if (document.querySelector(messengerSelector)) {
+        console.log("HomeworkHelpPage: Dialogflow Messenger for this agent already in DOM.");
+        messengerRef.current = document.querySelector(messengerSelector);
+        if (messengerRef.current) {
+            messengerRef.current.addEventListener('df-messenger-loaded', handleMessengerLoaded);
+        }
+        setRenderMessenger(true); 
+        return;
+      }
+
+      if ((window as any).dfMessengerBootstrapLoaded) {
+        console.log("HomeworkHelpPage: Dialogflow bootstrap script already loaded globally.");
+        setRenderMessenger(true);
+        return;
+      }
+      
+      let script = document.getElementById(DF_SCRIPT_ID) as HTMLScriptElement | null;
+      if (!script) {
+        script = document.createElement('script');
+        script.id = DF_SCRIPT_ID;
+        script.src = DIALOGFLOW_SCRIPT_URL;
+        script.async = true;
+        document.head.appendChild(script);
+        script.onload = () => {
+          console.log("HomeworkHelpPage: Dialogflow bootstrap.js loaded.");
+          (window as any).dfMessengerBootstrapLoaded = true; // Set global flag
+          setRenderMessenger(true);
+        };
+        script.onerror = () => {
+          console.error("HomeworkHelpPage: Failed to load Dialogflow bootstrap.js.");
+        };
+      } else {
+        const handleExistingScriptLoad = () => {
+          if (!(window as any).dfMessengerBootstrapLoaded) {
+            console.log("HomeworkHelpPage: Dialogflow bootstrap.js (existing tag) loaded.");
+            (window as any).dfMessengerBootstrapLoaded = true;
+          }
+          setRenderMessenger(true);
+        };
+
+        if ((window as any).dfMessengerBootstrapLoaded) { 
+            handleExistingScriptLoad();
+        } else {
+            script.addEventListener('load', handleExistingScriptLoad);
+            script.addEventListener('error', () => console.error("HomeworkHelpPage: Failed to load Dialogflow bootstrap.js (existing tag)."));
+        }
+      }
+    };
+
+    loadAndInitializeMessenger();
+
+    return () => {
+      const existingMessenger = document.querySelector(messengerSelector);
+      if (existingMessenger) {
+        console.log("HomeworkHelpPage: Removing Dialogflow Messenger for this agent on unmount.");
+        existingMessenger.removeEventListener('df-messenger-loaded', handleMessengerLoaded);
+        existingMessenger.remove();
+      }
+      setRenderMessenger(false); 
+      setIsMessengerComponentReady(false);
+      messengerRef.current = null;
+    };
+  }, [isClient]);
+
+
+  useEffect(() => {
+    if (!renderMessenger || !isClient) return;
+
+    const dfMessengerElement = document.querySelector(`df-messenger[agent-id="${HOMEWORK_AGENT_ID}"]`);
+    const handleDfMessengerLoadedEvent = () => {
+      console.log(`HomeworkHelpPage: df-messenger-loaded event received for agent ${HOMEWORK_AGENT_ID} (useEffect).`);
+      setIsMessengerComponentReady(true);
+    };
+
+    if (dfMessengerElement) {
+      dfMessengerElement.addEventListener('df-messenger-loaded', handleDfMessengerLoadedEvent);
+      messengerRef.current = dfMessengerElement as HTMLElement;
+
+      if ((dfMessengerElement as any)._instance && (dfMessengerElement as any)._instance.dfMessengerLoaded) {
+          setIsMessengerComponentReady(true);
+      }
+    }
+    return () => {
+      if (dfMessengerElement) {
+        dfMessengerElement.removeEventListener('df-messenger-loaded', handleDfMessengerLoadedEvent);
+      }
+    };
+  }, [renderMessenger, isClient]);
+
+  const isChatVisiblyOpen = (): boolean => {
+    if (!isClient) return false;
+    const dfMessenger = document.querySelector(`df-messenger[agent-id="${HOMEWORK_AGENT_ID}"]`) as HTMLElement | null;
+    if (!dfMessenger) return false;
+    const shadowRoot = dfMessenger.shadowRoot;
+    if (!shadowRoot) return false;
+    const chatWrapper = shadowRoot.querySelector('#dialogflow-chat-wrapper');
+    return chatWrapper ? getComputedStyle(chatWrapper).getPropertyValue('display') !== 'none' : false;
+  };
+
+  const openChatWidgetIfNotOpen = () => {
+    if (!isClient) {
+      console.warn('HomeworkHelpPage: Attempted to open chat before client hydration.');
+      return;
+    }
+    
+    const dfMessenger = document.querySelector(`df-messenger[agent-id="${HOMEWORK_AGENT_ID}"]`) as any;
+
+    if (!dfMessenger) {
+      console.warn(`HomeworkHelpPage: df-messenger with agent-id ${HOMEWORK_AGENT_ID} not found when trying to open.`);
+      return;
+    }
+
+    if (!dfMessenger.shadowRoot) {
+      console.warn("HomeworkHelpPage: df-messenger shadowRoot NOT FOUND when trying to open.");
+      return;
+    }
+    
+    const widgetIcon = dfMessenger.shadowRoot.querySelector('#widgetIcon') as HTMLElement | null;
+    
+    if (widgetIcon && !isChatVisiblyOpen()) {
+      console.log("HomeworkHelpPage: #widgetIcon FOUND. Clicking to open.");
+      widgetIcon.click();
+    } else if (isChatVisiblyOpen()) {
+      console.log("HomeworkHelpPage: Chat already open.");
+    } else {
+      console.warn("HomeworkHelpPage: #widgetIcon NOT FOUND in shadow DOM when trying to open. isMessengerComponentReady:", isMessengerComponentReady);
+    }
+  };
+  
+  const handleAskQuestionClick = () => {
+    openChatWidgetIfNotOpen();
   };
 
   return (
-    <>
-      <MentoraHeader
+    <div className="flex flex-col min-h-screen bg-background">
+      <Header
         title="📘 Homework Helper Bot"
         subtitle="Ask Your Questions Directly!"
-        description="Stuck on a tricky homework problem? Mentora's Homework Helper Bot is here to assist. Get explanations, work through problems, and deepen your understanding of various subjects."
+        description="Click the button below to ask Mentora about Physics, Chemistry, or English topics. The answers are sourced from our knowledge base."
+        showChatbotIcon={false}
+        isHomePage={false}
       />
-      <div className="container mx-auto py-12 px-4 md:px-8">
-        <Card className="shadow-lg bg-card">
-          <CardHeader>
-            <div className="flex items-center space-x-2 mb-2">
-                <Lightbulb className="h-8 w-8 text-accent" />
-                <CardTitle className="font-headline text-2xl text-primary-foreground">Your AI Study Partner</CardTitle>
-            </div>
-            <CardDescription>
-              Use the chat bot to get help with your homework questions. Follow the tips below for the best experience.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-8">
-            <div>
-              <div className="flex items-center text-lg font-semibold mb-2 text-primary-foreground">
-                <Info className="h-6 w-6 text-accent mr-2" />
-                How to Use the Bot
-              </div>
-              <p className="text-foreground/90">
-                Simply type your question into the chat window. Be as specific as possible for the best results. For example, instead of "Help with math," try "How do I solve quadratic equations using the formula?"
-              </p>
-              <ul className="list-disc list-inside mt-2 space-y-1 text-foreground/80 pl-4">
-                <li>Break down complex questions into smaller parts.</li>
-                <li>Specify the subject or topic if it's not obvious.</li>
-                <li>If you have an image of the problem, try describing it in text.</li>
-              </ul>
-            </div>
+      <main className="flex-grow container mx-auto px-4 py-8 md:py-12">
+        <div className="flex justify-center">
+          <Card className="w-full max-w-xl shadow-lg rounded-xl">
+            <CardHeader className="text-center items-center pt-6 pb-4">
+              <MessageSquareQuote size={36} className="text-primary-foreground mb-3" />
+              <CardTitle className="font-headline text-2xl text-primary-foreground">
+                Ask Your Homework Question
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-6 pb-6 md:px-8 md:pb-8">
+              <div className="text-left space-y-5 mb-6 text-sm text-foreground/90">
+                <div className="p-4 bg-primary/10 rounded-lg border border-primary/30">
+                  <h3 className="text-md font-semibold text-primary-foreground flex items-center mb-2">
+                    <Info size={18} className="mr-2 text-accent flex-shrink-0" />
+                    How to use the bot:
+                  </h3>
+                  <ul className="list-disc list-inside pl-5 space-y-1 text-foreground/80">
+                    <li>Type your question in full (avoid just keywords).</li>
+                    <li>Ask concept-based or theory questions.</li>
+                    <li>The bot currently supports Physics, Chemistry, and English topics.</li>
+                  </ul>
+                </div>
 
-            <div>
-              <div className="flex items-center text-lg font-semibold mb-2 text-primary-foreground">
-                <Sparkles className="h-6 w-6 text-accent mr-2" />
-                Example Questions
-              </div>
-              <ul className="list-disc list-inside space-y-1 text-foreground/80 pl-4">
-                <li>"Explain the process of photosynthesis."</li>
-                <li>"What were the main causes of World War I?"</li>
-                <li>"Can you help me understand Newton's laws of motion?"</li>
-                <li>"How do I balance this chemical equation: H2 + O2 → H2O?"</li>
-              </ul>
-            </div>
+                <div className="p-4 bg-primary/10 rounded-lg border border-primary/30">
+                  <h3 className="text-md font-semibold text-primary-foreground flex items-center mb-2">
+                    <Sparkles size={18} className="mr-2 text-accent flex-shrink-0" /> Examples:
+                  </h3>
+                  <ul className="list-disc list-inside pl-5 space-y-1 text-foreground/80">
+                    <li>What is a catalyst?</li>
+                    <li>Explain molarity.</li>
+                    <li>What is a simile?</li>
+                  </ul>
+                </div>
 
-            <div>
-              <div className="flex items-center text-lg font-semibold mb-2 text-destructive">
-                <AlertTriangle className="h-6 w-6 mr-2" />
-                Important Note
+                <div className="flex items-start text-sm p-4 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive">
+                  <AlertTriangle size={20} className="mr-3 text-destructive flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold">Important Note:</p>
+                    <p>
+                      The bot won’t solve numerical problems or math equations yet.
+                    </p>
+                  </div>
+                </div>
               </div>
-              <p className="text-foreground/90">
-                Mentora is a tool to help you learn and understand, not to do your homework for you. It aims to guide you to the answers. The bot may not always have the perfect answer for highly specific or complex niche topics, and its knowledge is based on its training data. Always double-check critical information.
-              </p>
-            </div>
-            
-            <div className="text-center pt-4">
-              <Button onClick={handleOpenChat} size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
-                Ask a Question
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </>
+
+              <div className="flex justify-center mt-8">
+                <Button 
+                  size="lg" 
+                  className="bg-accent hover:bg-accent/90 text-accent-foreground"
+                  onClick={handleAskQuestionClick}
+                  aria-label="Ask a homework question"
+                >
+                  <MessageCircle size={20} className="mr-2" />
+                  Ask a Question
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+      <Footer />
+      {isClient && renderMessenger && (
+        <df-messenger
+          intent="WELCOME"
+          chat-title="Homework"
+          agent-id={HOMEWORK_AGENT_ID}
+          language-code="en"
+          chat-width="360px"
+          chat-height="500px"
+        >
+          <df-messenger-chat-bubble></df-messenger-chat-bubble>
+        </df-messenger>
+      )}
+    </div>
   );
 }
