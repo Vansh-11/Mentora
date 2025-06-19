@@ -13,19 +13,19 @@ const cardData = [
   {
     href: '/mental-health',
     icon: MessageSquareText,
-    title: '🧠 Mental Health Support',
+    title: 'Mental Health Support',
     description: 'A safe space to talk, reflect, and find resources for your well-being.',
   },
   {
     href: '/homework-help',
     icon: NotebookPen,
-    title: '📘 Homework Helper Bot',
+    title: 'Homework Helper Bot',
     description: 'Get assistance with your homework questions and understand complex topics.',
   },
   {
     href: '/activities',
     icon: CalendarDays,
-    title: '🗓️ Activities Assistant',
+    title: 'Activities Assistant',
     description: 'Stay updated on school events, clubs, and extracurricular activities.',
   },
 ];
@@ -57,7 +57,7 @@ export default function HomePage() {
           <h2 className="text-3xl font-bold text-center mb-8 font-headline text-primary-foreground">Explore Mentora Hub</h2>
           <div className="grid md:grid-cols-3 gap-8">
             {cardData.map((card) => (
-              <Link href={card.href} key={card.title} legacyBehavior={false} passHref={false}>
+              <Link href={card.href} key={card.title} passHref={false}>
                 <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col bg-card hover:border-accent">
                   <CardHeader>
                     <div className="flex justify-center mb-4">
@@ -105,7 +105,7 @@ export default function HomePage() {
           <p className="text-lg text-foreground/90 mb-6">
             Dive into Mentora Hub and discover how we can support your journey.
           </p>
-          <Link href="/mental-health" legacyBehavior={false} passHref={false}>
+          <Link href="/mental-health" passHref={false}>
             <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
               Get Started with Mental Health Support
             </Button>
