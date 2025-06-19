@@ -39,13 +39,14 @@ export const DialogflowProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
     const scriptId = 'df-messenger-script';
     if (document.getElementById(scriptId)) {
+      // Script tag exists, wait for window.dfMessenger to be populated
       const interval = setInterval(() => {
         if (window.dfMessenger) {
           setIsScriptLoaded(true);
           clearInterval(interval);
         }
       }, 100);
-      return;
+      return () => clearInterval(interval);
     }
 
     const script = document.createElement('script');
@@ -53,7 +54,9 @@ export const DialogflowProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     script.src = 'https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1';
     script.async = true;
     script.onload = () => {
-      setIsScriptLoaded(true); // Set immediately, window.dfMessenger should be available
+      // window.dfMessenger should be available now or very shortly after
+      // Set isScriptLoaded, and the next effect will handle messenger element creation
+      setIsScriptLoaded(true);
     };
     script.onerror = () => {
       console.error("Failed to load Dialogflow Messenger script.");
@@ -67,6 +70,8 @@ export const DialogflowProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       let messengerEl = document.querySelector('df-messenger') as HTMLElement;
       if (!messengerEl) {
         messengerEl = document.createElement('df-messenger');
+        // Important: Append to body so it's part of the document flow
+        // and can receive events / be processed by the DF library.
         document.body.appendChild(messengerEl);
       }
       dfMessengerRef.current = messengerEl;
@@ -74,22 +79,26 @@ export const DialogflowProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       const handleMessengerLoaded = () => {
         setIsMessengerReadyForCommands(true);
       };
-
+      
+      // Ensure listener is added only once or correctly re-added if messengerEl changes.
+      // Given messengerEl is selected or created and then stored in ref, this should be fine.
       messengerEl.removeEventListener('df-messenger-loaded', handleMessengerLoaded);
       messengerEl.addEventListener('df-messenger-loaded', handleMessengerLoaded);
       
-      // If messenger is already loaded (e.g. fast load, re-render), set ready state
+      // If messenger is already loaded (e.g. fast load from cache, or re-render after load)
+      // The event 'df-messenger-loaded' might have already fired.
       // Accessing internal properties like _isLoaded is not ideal but can be a fallback.
       // The event listener is the primary mechanism.
       if (window.dfMessenger && (messengerEl as any)._isLoaded) {
           setIsMessengerReadyForCommands(true);
       }
 
-      // Ensure it's hidden initially or if it becomes unconfigured later.
-      // Actual display 'block' will be handled when config is applied and messenger is ready.
+      // Ensure it's hidden initially. Actual display 'block' will be handled when 
+      // config is applied AND messenger is ready.
       messengerEl.style.display = 'none';
 
       return () => {
+        // Cleanup listener when provider unmounts or script re-evaluates
         if (messengerEl) {
           messengerEl.removeEventListener('df-messenger-loaded', handleMessengerLoaded);
         }
@@ -100,7 +109,7 @@ export const DialogflowProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   useEffect(() => {
     const messenger = dfMessengerRef.current;
-    if (messenger && isScriptLoaded) { // Basic checks
+    if (messenger && isScriptLoaded) { // Basic checks for element and script
       if (currentConfig && isMessengerReadyForCommands) { // Ensure messenger is ready for attribute changes
         messenger.setAttribute('agent-id', currentConfig.agentId);
         messenger.setAttribute('intent', currentConfig.intent);
@@ -111,33 +120,40 @@ export const DialogflowProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           messenger.removeAttribute('chat-subtitle');
         }
         messenger.setAttribute('language-code', currentConfig.languageCode || 'en');
-        messenger.style.display = 'block'; // Make element visible, DF controls chat UI visibility
-      } else if (!currentConfig) { // No config, ensure it's hidden
+        // Ensure the df-messenger HTML element itself is visible in the DOM,
+        // so that the Dialogflow library can control the chat bubble visibility.
+        messenger.style.display = 'block'; 
+      } else if (!currentConfig) { // No config, ensure it's hidden and attributes are cleared
         messenger.removeAttribute('agent-id');
         messenger.removeAttribute('intent');
         messenger.removeAttribute('chat-title');
         messenger.removeAttribute('chat-subtitle');
+        messenger.removeAttribute('language-code');
         messenger.style.display = 'none';
       } else if (currentConfig && !isMessengerReadyForCommands) {
-        // Config is present, script loaded, but messenger not ready -> keep it hidden
+        // Config is present, script loaded, but messenger not ready (df-messenger-loaded event hasn't fired)
+        // Keep it hidden and wait for isMessengerReadyForCommands to become true.
         messenger.style.display = 'none';
       }
     }
   }, [currentConfig, isScriptLoaded, isMessengerReadyForCommands]);
 
   const setConfig = useCallback((config: DialogflowConfig | null) => {
-    // If setting a new config, messenger might need to re-initialize for that config
-    // We reset isMessengerReadyForCommands only if config actually changes to a new agent or null.
-    // If config details change but agentId remains, it might not need full 'df-messenger-loaded' again.
-    // However, simplest is to reset if config is set to non-null, assuming df-messenger-loaded will fire again or attributes are dynamic.
-    // For now, let's not reset isMessengerReadyForCommands on setConfig, as attributes are dynamic.
-    // The `df-messenger-loaded` event is more about the initial load of the component itself.
+    // If config is being set to null, or to a new agent, it's good to ensure
+    // isMessengerReadyForCommands might need to be re-evaluated if the agent instance changes significantly.
+    // However, the `df-messenger-loaded` event is for the component's initial load.
+    // Attribute changes are generally dynamic.
+    // If config becomes null, we hide and clear attributes.
+    // If config changes, the attributes are updated in the useEffect above.
+    // We don't reset isMessengerReadyForCommands here as the script is still loaded and element exists.
     setCurrentConfig(config);
   }, []);
 
   const openChat = useCallback(() => {
     if (isScriptLoaded && window.dfMessenger && dfMessengerRef.current && currentConfig && isMessengerReadyForCommands) {
-        dfMessengerRef.current.style.display = 'block'; // Ensure container is visible
+        // Ensure the df-messenger element itself is displayed, then open.
+        // The Dialogflow library itself handles the visibility of the chat bubble/window.
+        dfMessengerRef.current.style.display = 'block'; 
         window.dfMessenger.open();
     } else {
         let reason = "";
