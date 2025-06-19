@@ -1,3 +1,4 @@
+
 "use client";
 import { useEffect } from 'react';
 import Link from 'next/link';
@@ -56,7 +57,7 @@ export default function HomePage() {
           <h2 className="text-3xl font-bold text-center mb-8 font-headline text-primary-foreground">Explore Mentora Hub</h2>
           <div className="grid md:grid-cols-3 gap-8">
             {cardData.map((card) => (
-              <Link href={card.href} key={card.title} passHref legacyBehavior>
+              <Link href={card.href} key={card.title}>
                 <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col bg-card hover:border-accent">
                   <CardHeader>
                     <div className="flex justify-center mb-4">
@@ -104,7 +105,7 @@ export default function HomePage() {
           <p className="text-lg text-foreground/90 mb-6">
             Dive into Mentora Hub and discover how we can support your journey.
           </p>
-          <Link href="/mental-health" passHref legacyBehavior>
+          <Link href="/mental-health">
             <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
               Get Started with Mental Health Support
             </Button>

@@ -1,3 +1,4 @@
+
 import type React from 'react';
 import Link from 'next/link';
 import { Home } from 'lucide-react';
@@ -24,7 +25,7 @@ const MentoraHeader: React.FC<HeaderProps> = ({ title, subtitle, description, is
             )}
           </div>
           {!isHomePage && (
-            <Link href="/" passHref legacyBehavior>
+            <Link href="/">
               <Button variant="ghost" size="icon" aria-label="Go to Homepage">
                 <Home className="h-6 w-6 text-primary-foreground" />
               </Button>
