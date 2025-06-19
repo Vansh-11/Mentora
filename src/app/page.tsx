@@ -1,117 +1,121 @@
 
-"use client";
-// import { useEffect } from 'react'; // No longer needed for DialogflowContext
-import Link from 'next/link';
+import Header from '@/components/mentora/Header';
+import Footer from '@/components/mentora/Footer';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
-import { MessageSquareText, NotebookPen, CalendarDays, ArrowRight } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import MentoraHeader from '@/components/mentora/Header';
-// import { useDialogflow } from '@/contexts/DialogflowContext'; // Removed
+import Link from 'next/link';
+import { MessageSquareText, NotebookPen, CalendarDays, Zap } from 'lucide-react';
 
-const cardData = [
-  {
-    href: '/mental-health',
-    icon: MessageSquareText,
-    title: 'Mental Health Support',
-    description: 'A safe space to talk, reflect, and find resources for your well-being.',
-  },
-  {
-    href: '/homework-help',
-    icon: NotebookPen,
-    title: 'Homework Helper Bot',
-    description: 'Get assistance with your homework questions and understand complex topics.',
-  },
-  {
-    href: '/activities',
-    icon: CalendarDays,
-    title: 'Activities Assistant',
-    description: 'Stay updated on school events, clubs, and extracurricular activities.',
-  },
-];
-
-const benefits = [
-  "Instant, 24/7 access to support and information.",
-  "Personalized assistance tailored to your needs.",
-  "A friendly companion for your academic journey.",
-  "Confidential and secure platform for your queries."
-];
-
-export default function HomePage() {
-  // const { setConfig } = useDialogflow(); // Removed
-
-  // useEffect(() => { // Removed
-  //   setConfig(null); // No chatbot on the homepage
-  // }, [setConfig]);
-
+export default function Home() {
   return (
-    <>
-      <MentoraHeader
-        isHomePage
-        title={<span className="font-headline">👋 Welcome to Mentora Hub</span>}
-        subtitle={<span className="font-headline">Your All-in-One Student Support Companion</span>}
-        description="Navigating student life can be challenging. Mentora Hub is here to provide you with instant support for mental wellness, homework queries, and staying updated with school activities. Explore our features and let Mentora be your guide!"
+    <div className="flex flex-col min-h-screen bg-background">
+      <Header 
+        isHomePage={true} 
+        title="👋 Welcome to Mentora Hub"
+        subtitle="Your All-in-One Student Support Companion"
+        description="Navigate through our services for mental well-being, academic assistance, and exploring school activities. Mentora is here to help you thrive."
       />
-      <div className="container mx-auto py-12 px-4 md:px-8">
-        <section className="mb-16">
-          <h2 className="text-3xl font-bold text-center mb-8 font-headline text-primary-foreground">Explore Mentora Hub</h2>
+      <main className="flex-grow container mx-auto px-4 py-8 md:py-12">
+        <section className="text-center mb-12 md:mb-16">
+          <h2 className="text-2xl md:text-3xl font-headline font-semibold text-primary-foreground mb-4">Explore Mentora's Features</h2>
+          <p className="text-lg text-foreground/90 max-w-2xl mx-auto mb-8">
+            Mentora offers a range of tools to support your student life. Click on a feature below to learn more and get started.
+          </p>
           <div className="grid md:grid-cols-3 gap-8">
-            {cardData.map((card) => (
-              <Link href={card.href} key={card.title} passHref={false}>
-                <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col bg-card hover:border-accent">
-                  <CardHeader>
-                    <div className="flex justify-center mb-4">
-                      <card.icon className="w-12 h-12 text-accent" />
-                    </div>
-                    <CardTitle className="text-center font-headline">{card.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                    <CardDescription className="text-center">{card.description}</CardDescription>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+            <Link href="/mental-health" className="block no-underline">
+              <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl h-full flex flex-col">
+                <CardHeader className="items-center text-center">
+                  <div className="p-3 bg-primary/20 rounded-full mb-2 inline-block">
+                    <MessageSquareText size={32} className="text-primary-foreground" />
+                  </div>
+                  <CardTitle className="font-headline text-xl text-primary-foreground">🧠 Mental Health Support</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center flex-grow">
+                  <CardDescription className="text-foreground/80">
+                    A safe space to talk about your feelings, manage stress, and find well-being resources.
+                  </CardDescription>
+                </CardContent>
+              </Card>
+            </Link>
+            
+            <Link href="/homework-help" className="block no-underline">
+              <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl h-full flex flex-col">
+                <CardHeader className="items-center text-center">
+                  <div className="p-3 bg-primary/20 rounded-full mb-2 inline-block">
+                    <NotebookPen size={32} className="text-primary-foreground" />
+                  </div>
+                  <CardTitle className="font-headline text-xl text-primary-foreground">📚 Homework Help</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center flex-grow">
+                  <CardDescription className="text-foreground/80">
+                    Get assistance with challenging subjects like Physics, Chemistry, Maths, and English.
+                  </CardDescription>
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link href="/activities" className="block no-underline">
+              <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl h-full flex flex-col">
+                <CardHeader className="items-center text-center">
+                  <div className="p-3 bg-primary/20 rounded-full mb-2 inline-block">
+                    <CalendarDays size={32} className="text-primary-foreground" />
+                  </div>
+                  <CardTitle className="font-headline text-xl text-primary-foreground">📅 Activities & Events</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center flex-grow">
+                  <CardDescription className="text-foreground/80">
+                    View upcoming and completed school events. Register for activities and see event details.
+                  </CardDescription>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
         </section>
 
-        <section className="mb-16 bg-primary/5 p-8 rounded-lg">
-          <h2 className="text-3xl font-bold text-center mb-8 font-headline text-primary-foreground">Why Mentora?</h2>
-          <div className="flex flex-col md:flex-row items-center gap-8">
-            <div className="md:w-1/2">
+        <section className="text-center mb-12 md:mb-16">
+          <h2 className="text-2xl md:text-3xl font-headline font-semibold text-primary-foreground mb-6">Why Mentora?</h2>
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div>
               <Image 
                 src="https://placehold.co/600x400.png" 
-                alt="Students collaborating" 
+                alt="Illustration of diverse students benefiting from support"
+                data-ai-hint="student wellness education"
                 width={600} 
                 height={400} 
-                className="rounded-lg shadow-md"
-                data-ai-hint="student wellness education" 
+                className="rounded-lg shadow-md mx-auto" 
               />
             </div>
-            <div className="md:w-1/2">
-              <ul className="space-y-3">
-                {benefits.map((benefit, index) => (
-                  <li key={index} className="flex items-start">
-                    <ArrowRight className="h-5 w-5 text-accent mr-2 mt-1 shrink-0" />
-                    <span>{benefit}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <ul className="space-y-4 text-left text-foreground/90 text-lg">
+              <li className="flex items-start">
+                <Zap size={20} className="text-accent flex-shrink-0 mr-3 mt-1" />
+                Instant, 24/7 access to support and information.
+              </li>
+              <li className="flex items-start">
+                <Zap size={20} className="text-accent flex-shrink-0 mr-3 mt-1" />
+                Confidential and non-judgmental interactions.
+              </li>
+              <li className="flex items-start">
+                <Zap size={20} className="text-accent flex-shrink-0 mr-3 mt-1" />
+                Personalized assistance for your academic and emotional needs.
+              </li>
+              <li className="flex items-start">
+                <Zap size={20} className="text-accent flex-shrink-0 mr-3 mt-1" />
+                Easy-to-use interface, designed for students.
+              </li>
+            </ul>
           </div>
         </section>
-
-        <section className="text-center py-12 bg-accent/20 rounded-lg">
-          <h2 className="text-3xl font-bold mb-4 font-headline text-accent-foreground">Ready to Engage?</h2>
-          <p className="text-lg text-foreground/90 mb-6">
-            Dive into Mentora Hub and discover how we can support your journey.
+        
+        <section className="bg-primary/10 p-8 rounded-xl shadow-md text-center">
+          <h2 className="text-2xl md:text-3xl font-headline font-semibold text-primary-foreground mb-4">Ready to Engage?</h2>
+          <p className="text-lg text-foreground/90 mb-6 max-w-xl mx-auto">
+            Your well-being and academic success are important. Mentora is designed to be a helpful companion on your student journey.
+            Explore the sections above or click the chat bubble in the corner to start a general conversation.
           </p>
-          <Link href="/mental-health" passHref={false}>
-            <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
-              Get Started with Mental Health Support
-            </Button>
-          </Link>
         </section>
-      </div>
-    </>
+
+      </main>
+      <Footer />
+    </div>
   );
 }

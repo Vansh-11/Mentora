@@ -13,11 +13,6 @@ if (!admin.apps.length) {
       if (serviceAccountPath.trim().startsWith('{')) {
         serviceAccount = JSON.parse(serviceAccountPath);
       } else {
-        // This part might cause issues in a serverless environment if fs is not available
-        // or if the path is not correctly resolved.
-        // For Vercel/Next.js API routes, it's often better to pass the JSON string directly.
-        // Consider if require('fs') is truly needed or if direct JSON parsing is sufficient.
-        // For now, keeping as provided, but be mindful of deployment.
         serviceAccount = JSON.parse(
           require('fs').readFileSync(serviceAccountPath, 'utf8')
         );
@@ -26,23 +21,16 @@ if (!admin.apps.length) {
         credential: admin.credential.cert(serviceAccount),
       });
       console.log('Firebase Admin SDK initialized with service account credentials.');
-    } else if (process.env.NODE_ENV === 'production' && process.env.FIREBASE_CONFIG) {
-      // Standard Firebase Hosting/Functions environment variables
+    } else {
       admin.initializeApp();
-      console.log('Firebase Admin SDK initialized with default Google Cloud credentials (production).');
-    }
-     else {
-      // Fallback for local development if GOOGLE_APPLICATION_CREDENTIALS is not set
-      // This will attempt to use default credentials if available, or fail if none are found.
-      admin.initializeApp();
-      console.log('Firebase Admin SDK initialized with default credentials (local/fallback).');
+      console.log('Firebase Admin SDK initialized with default credentials.');
     }
   } catch (error: any) {
     console.error('Firebase Admin SDK initialization error:', error.stack);
   }
 }
 
-const db = admin.apps.length ? admin.firestore() : null;
+const db = admin.firestore();
 
 // --- SendGrid Configuration ---
 if (process.env.SENDGRID_API_KEY) {
@@ -50,6 +38,7 @@ if (process.env.SENDGRID_API_KEY) {
 } else {
   console.warn('SENDGRID_API_KEY environment variable not set. Email sending will be disabled.');
 }
+
 const SENDGRID_FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL as string;
 const EVENT_COORDINATOR_EMAIL = 'icyarrow91@gmail.com'; // Kept as requested
 
@@ -126,12 +115,12 @@ export async function POST(request: NextRequest) {
     const parsedContactNumber = parameters.contactNumber || 'Not provided';
     const parsedExperience = parameters.codingExperience || 'Not provided';
 
-    console.log(`✅ Registration Received:
-- Full Name: ${parsedName}
-- Class & Section: ${parsedClassSection}
-- Roll Number: ${parsedRollNumber}
-- Contact Number: ${parsedContactNumber}
-- Coding Experience: ${parsedExperience}`);
+    console.log(\`✅ Registration Received:
+- Full Name: \${parsedName}
+- Class & Section: \${parsedClassSection}
+- Roll Number: \${parsedRollNumber}
+- Contact Number: \${parsedContactNumber}
+- Coding Experience: \${parsedExperience}\`);
 
     const registrationData = {
       timestamp,
@@ -145,7 +134,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Save to Firestore
-    if (db) {
+    if (admin.apps.length && db) {
       try {
         const docRef = await db.collection('registrations').add(registrationData);
         console.log('Registration data saved to Firestore with ID:', docRef.id);
@@ -167,16 +156,16 @@ export async function POST(request: NextRequest) {
     ].every(val => val !== 'Not provided');
 
     if (allProvided) {
-      fulfillmentText = `Thank you! We've received the following registration details for event "${intentName}":
-- Full Name: ${parsedName}
-- Class & Section: ${parsedClassSection}
-- Roll Number: ${parsedRollNumber}
-- Contact Number: ${parsedContactNumber}
-- Coding Experience: ${parsedExperience}
+      fulfillmentText = \`Thank you! We've received the following registration details for event "\${intentName}":
+- Full Name: \${parsedName}
+- Class & Section: \${parsedClassSection}
+- Roll Number: \${parsedRollNumber}
+- Contact Number: \${parsedContactNumber}
+- Coding Experience: \${parsedExperience}
 
-We will process your registration.`;
+We will process your registration.\`;
 
-      // Send Email if API key and From Email are set
+      // Send Email
       if (process.env.SENDGRID_API_KEY && SENDGRID_FROM_EMAIL) {
         const plainTextBody = fulfillmentText;
         const emailMsg = createEmailMessage({
@@ -196,7 +185,7 @@ We will process your registration.`;
           fulfillmentText += ' A confirmation email has also been sent to the coordinator.';
         } catch (emailError: any) {
           console.error('❌ Failed to send email:', emailError.response?.body || emailError.message);
-          // Optionally, inform user that email failed but registration was saved
+          fulfillmentText += ' Failed to send confirmation email to coordinator.';
         }
       } else {
         console.warn('SendGrid API Key or From Email not configured. Skipping email send.');
@@ -206,12 +195,12 @@ We will process your registration.`;
       // Check if it's a known intent that expects parameters, not a general welcome/fallback intent
       const parameterCollectionIntents = ['EventRegistrationIntent', 'CodingWorkshopRegistration']; // Add your actual intent names here
       if (parameterCollectionIntents.includes(intentName) || (intentName !== 'Unknown Intent' && intentName !== 'Default Welcome Intent' && intentName !== 'Welcome')) {
-        fulfillmentText = `It seems some details might be missing for your registration for "${intentName}". Please ensure all information is provided. We received:
-- Full Name: ${parsedName}
-- Class & Section: ${parsedClassSection}
-- Roll Number: ${parsedRollNumber}
-- Contact Number: ${parsedContactNumber}
-- Coding Experience: ${parsedExperience}`;
+        fulfillmentText = \`It seems some details might be missing for your registration for "\${intentName}". Please ensure all information is provided. We received:
+- Full Name: \${parsedName}
+- Class & Section: \${parsedClassSection}
+- Roll Number: \${parsedRollNumber}
+- Contact Number: \${parsedContactNumber}
+- Coding Experience: \${parsedExperience}\`;
       } else {
         fulfillmentText = body.queryResult?.fulfillmentText || "Request received. How else can I help you today?";
       }
@@ -221,8 +210,7 @@ We will process your registration.`;
       fulfillmentMessages: [{ text: { text: [fulfillmentText] } }],
     }, { status: 200 });
 
-  } catch (error: any)
-   {
+  } catch (error: any) {
     console.error('Error in Dialogflow Webhook:', error);
     return NextResponse.json({
       fulfillmentMessages: [
@@ -231,3 +219,5 @@ We will process your registration.`;
     }, { status: 500 });
   }
 }
+
+    
