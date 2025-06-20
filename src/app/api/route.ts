@@ -29,13 +29,15 @@ if (typeof window === 'undefined' && !admin.apps.length) { // Check if in server
 const db = admin.firestore();
 
 // --- SendGrid Configuration ---
-if (process.env.SENDGRID_API_KEY) {
-  sgMail.setApiKey("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"); //process.env.SENDGRID_API_KEY as string
+const sendGridApiKeyFromEnv = process.env.SENDGRID_API_KEY;
+const sendGridFromEmailFromEnv = process.env.SENDGRID_FROM_EMAIL;
+
+if (sendGridApiKeyFromEnv) {
+  sgMail.setApiKey(sendGridApiKeyFromEnv);
 } else {
-  console.warn('SENDGRID_API_KEY environment variable not set. Email sending will be disabled.');
+  console.warn('SENDGRID_API_KEY environment variable not set. Email sending may be disabled or fail.');
 }
 
-const SENDGRID_FROM_EMAIL =  "vanshsharma11.2009@gmail.com"; //process.env.SENDGRID_FROM_EMAIL as string ||
 const EVENT_COORDINATOR_EMAIL = 'icyarrow91@gmail.com'; // Kept as requested
 
 // 🔧 Helper function to generate the email message
@@ -45,6 +47,7 @@ function createEmailMessage({
   parsedRollNumber,
   parsedContactNumber,
   parsedExperience,
+  intentName,
   timestamp,
   emailBody,
 }: {
@@ -85,7 +88,7 @@ function createEmailMessage({
 
   return {
     to: EVENT_COORDINATOR_EMAIL,
-    from: SENDGRID_FROM_EMAIL,
+    from: sendGridFromEmailFromEnv, // Use the variable derived from process.env
     subject: `New Event Registration For Coding Hackathon`,
     text: emailBody,
     html: htmlbody,
@@ -162,7 +165,7 @@ export async function POST(request: NextRequest) {
 We will process your registration.`;
 
       // Send Email
-      if (process.env.SENDGRID_API_KEY && SENDGRID_FROM_EMAIL) {
+      if (sendGridApiKeyFromEnv && sendGridFromEmailFromEnv) {
         const plainTextBody = `Hello,
 
         A new student has registered for the event: Coding Hackathon.
@@ -219,7 +222,7 @@ We will process your registration.`;
       fulfillmentMessages: [{ text: { text: [fulfillmentText] } }],
     }, { status: 200 });
 
-  } catch (error: any) {
+  } catch (error: any)_ {
     console.error('Error in Dialogflow Webhook:', error);
     return NextResponse.json({
       fulfillmentMessages: [
