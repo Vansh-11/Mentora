@@ -6,6 +6,34 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { MessageSquareText, NotebookPen, CalendarDays, Zap } from 'lucide-react';
 
+interface CardData {
+  href: string;
+  title: string;
+  description: string;
+  icon: React.ElementType;
+}
+
+const cardData: CardData[] = [
+  {
+    href: '/mental-health',
+    title: 'Mental Health Support',
+    description: 'A safe space to talk about your feelings, manage stress, and find well-being resources.',
+    icon: MessageSquareText,
+  },
+  {
+    href: '/homework-help',
+    title: 'Homework Help',
+    description: 'Get assistance with challenging subjects like Physics, Chemistry, Maths, and English.',
+    icon: NotebookPen,
+  },
+  {
+    href: '/activities',
+    title: 'Activities & Events',
+    description: 'View upcoming and completed school events. Register for activities and see event details.',
+    icon: CalendarDays,
+  },
+];
+
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -15,60 +43,33 @@ export default function Home() {
         subtitle="Your All-in-One Student Support Companion"
         description="Navigate through our services for mental well-being, academic assistance, and exploring school activities. Mentora is here to help you thrive."
       />
-      <main className="flex-grow container mx-auto px-4 py-8 md:py-12">
+      <main className="flex-grow container mx-auto py-8 md:py-12">
         <section className="text-center mb-12 md:mb-16">
           <h2 className="text-2xl md:text-3xl font-headline font-semibold text-primary-foreground mb-4">Explore Mentora's Features</h2>
           <p className="text-lg text-foreground/90 max-w-2xl mx-auto mb-8">
             Mentora offers a range of tools to support your student life. Click on a feature below to learn more and get started.
           </p>
           <div className="grid md:grid-cols-3 gap-8">
-            <Link href="/mental-health" className="block no-underline">
-              <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl h-full flex flex-col">
-                <CardHeader className="items-center text-center">
-                  <div className="p-3 bg-primary/20 rounded-full mb-2 inline-block">
-                    <MessageSquareText size={32} className="text-primary-foreground" />
-                  </div>
-                  <CardTitle className="font-headline text-xl text-primary-foreground">🧠 Mental Health Support</CardTitle>
-                </CardHeader>
-                <CardContent className="text-center flex-grow">
-                  <CardDescription className="text-foreground/80">
-                    A safe space to talk about your feelings, manage stress, and find well-being resources.
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            </Link>
-            
-            <Link href="/homework-help" className="block no-underline">
-              <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl h-full flex flex-col">
-                <CardHeader className="items-center text-center">
-                  <div className="p-3 bg-primary/20 rounded-full mb-2 inline-block">
-                    <NotebookPen size={32} className="text-primary-foreground" />
-                  </div>
-                  <CardTitle className="font-headline text-xl text-primary-foreground">📚 Homework Help</CardTitle>
-                </CardHeader>
-                <CardContent className="text-center flex-grow">
-                  <CardDescription className="text-foreground/80">
-                    Get assistance with challenging subjects like Physics, Chemistry, Maths, and English.
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            </Link>
-
-            <Link href="/activities" className="block no-underline">
-              <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl h-full flex flex-col">
-                <CardHeader className="items-center text-center">
-                  <div className="p-3 bg-primary/20 rounded-full mb-2 inline-block">
-                    <CalendarDays size={32} className="text-primary-foreground" />
-                  </div>
-                  <CardTitle className="font-headline text-xl text-primary-foreground">📅 Activities & Events</CardTitle>
-                </CardHeader>
-                <CardContent className="text-center flex-grow">
-                  <CardDescription className="text-foreground/80">
-                    View upcoming and completed school events. Register for activities and see event details.
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            </Link>
+            {cardData.map((card) => {
+              const Icon = card.icon;
+              return (
+                <Link href={card.href} key={card.title} className="block no-underline">
+                  <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl h-full flex flex-col">
+                    <CardHeader className="items-center text-center">
+                      <div className="p-3 bg-primary/20 rounded-full mb-2 inline-block">
+                        <Icon size={32} className="text-primary-foreground" />
+                      </div>
+                      <CardTitle className="font-headline text-xl text-primary-foreground">{card.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center flex-grow">
+                      <CardDescription className="text-foreground/80">
+                        {card.description}
+                      </CardDescription>
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
           </div>
         </section>
 

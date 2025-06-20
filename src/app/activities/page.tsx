@@ -7,6 +7,7 @@ import Footer from '@/components/mentora/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Sparkles, ChevronRight, MessageSquareHeart, MessageCircle } from 'lucide-react';
+import Image from 'next/image';
 
 const ACTIVITIES_AGENT_ID = "75e34229-81d6-48dc-a566-837752d63132";
 const DIALOGFLOW_SCRIPT_URL = "https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1";
@@ -155,7 +156,6 @@ export default function ActivitiesPage() {
     
     if (!dfMessenger.shadowRoot) {
         console.warn("ActivitiesPage: df-messenger shadowRoot NOT FOUND when trying to open. Attempting to wait for it.");
-        // Optionally, add a small delay and retry, or rely on isMessengerComponentReady
         if (isMessengerComponentReady) {
             const widgetIconRetry = dfMessenger.shadowRoot?.querySelector('#widgetIcon') as HTMLElement | null;
             if (widgetIconRetry && !isChatVisiblyOpen()) {
@@ -191,9 +191,9 @@ export default function ActivitiesPage() {
         showChatbotIcon={false} 
         isHomePage={false}
       />
-      <main className="flex-grow container mx-auto px-4 py-8 md:py-12">
-        <div className="flex justify-center">
-          <Card className="w-full max-w-2xl shadow-lg rounded-xl">
+      <main className="flex-grow container mx-auto py-8 md:py-12">
+        <section className="grid md:grid-cols-2 gap-8 items-center mb-12 md:mb-16">
+          <Card className="w-full shadow-lg rounded-xl h-full">
             <CardHeader className="text-center items-center pt-6 pb-4">
               <MessageSquareHeart size={36} className="text-primary-foreground mb-3" />
               <CardTitle className="font-headline text-2xl text-primary-foreground">
@@ -239,7 +239,26 @@ export default function ActivitiesPage() {
               </div>
             </CardContent>
           </Card>
-        </div>
+          <div>
+            <Image 
+              src="https://placehold.co/600x450.png" 
+              alt="Illustration of school events or calendar"
+              data-ai-hint="school events calendar"
+              width={600} 
+              height={450} 
+              className="rounded-lg shadow-xl mx-auto" 
+            />
+          </div>
+        </section>
+
+        <section className="bg-primary/10 p-6 md:p-8 rounded-xl shadow-md text-center">
+          <h2 className="text-2xl md:text-3xl font-headline font-semibold text-primary-foreground mb-3">
+            Stay Informed!
+          </h2>
+          <p className="text-md md:text-lg text-foreground/85 max-w-2xl mx-auto">
+            Use the Activities Assistant to easily find out about all school happenings, from club meetings to sports events and special workshops.
+          </p>
+        </section>
       </main>
       <Footer />
       {isClient && renderMessenger && (

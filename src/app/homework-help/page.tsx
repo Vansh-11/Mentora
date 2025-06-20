@@ -7,10 +7,11 @@ import Footer from '@/components/mentora/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Info, AlertTriangle, MessageSquareQuote, Sparkles, MessageCircle } from 'lucide-react';
+import Image from 'next/image';
 
 const HOMEWORK_AGENT_ID = "20dce2b7-dfcf-491e-bee9-5d19f6c8837f";
 const DIALOGFLOW_SCRIPT_URL = "https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1";
-const DF_SCRIPT_ID = "dialogflow-bootstrap-script-homework"; // Unique ID for this page's script
+const DF_SCRIPT_ID = "dialogflow-bootstrap-script-homework"; 
 
 export default function HomeworkHelpPage() {
   const [isClient, setIsClient] = useState(false);
@@ -64,7 +65,7 @@ export default function HomeworkHelpPage() {
         document.head.appendChild(script);
         script.onload = () => {
           console.log("HomeworkHelpPage: Dialogflow bootstrap.js loaded.");
-          (window as any).dfMessengerBootstrapLoaded = true; // Set global flag
+          (window as any).dfMessengerBootstrapLoaded = true; 
           setRenderMessenger(true);
         };
         script.onerror = () => {
@@ -181,9 +182,9 @@ export default function HomeworkHelpPage() {
         showChatbotIcon={false}
         isHomePage={false}
       />
-      <main className="flex-grow container mx-auto px-4 py-8 md:py-12">
-        <div className="flex justify-center">
-          <Card className="w-full max-w-xl shadow-lg rounded-xl">
+      <main className="flex-grow container mx-auto py-8 md:py-12">
+        <section className="grid md:grid-cols-2 gap-8 items-center mb-12 md:mb-16">
+          <Card className="w-full shadow-lg rounded-xl h-full">
             <CardHeader className="text-center items-center pt-6 pb-4">
               <MessageSquareQuote size={36} className="text-primary-foreground mb-3" />
               <CardTitle className="font-headline text-2xl text-primary-foreground">
@@ -239,7 +240,27 @@ export default function HomeworkHelpPage() {
               </div>
             </CardContent>
           </Card>
-        </div>
+           <div>
+            <Image 
+              src="https://placehold.co/600x450.png" 
+              alt="Student studying or books and learning materials"
+              data-ai-hint="student studying books"
+              width={600} 
+              height={450} 
+              className="rounded-lg shadow-xl mx-auto" 
+            />
+          </div>
+        </section>
+        
+        <section className="bg-primary/10 p-6 md:p-8 rounded-xl shadow-md text-center">
+          <h2 className="text-2xl md:text-3xl font-headline font-semibold text-primary-foreground mb-3">
+            Unlock Knowledge!
+          </h2>
+          <p className="text-md md:text-lg text-foreground/85 max-w-2xl mx-auto">
+            Don't get stuck on homework. Ask the Homework Helper for explanations and information on various subjects.
+          </p>
+        </section>
+
       </main>
       <Footer />
       {isClient && renderMessenger && (

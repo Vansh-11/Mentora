@@ -185,7 +185,7 @@ export default function MentalHealthPage() {
         isHomePage={false}
       />
 
-      <main className="flex-grow container mx-auto px-4 py-8 md:py-12">
+      <main className="flex-grow container mx-auto py-8 md:py-12">
         <section className="grid md:grid-cols-2 gap-8 items-center mb-12 md:mb-16">
           <div>
             <h2 className="text-2xl md:text-3xl font-headline font-semibold text-primary-foreground mb-4">
