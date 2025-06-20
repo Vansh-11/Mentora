@@ -4,7 +4,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import Header from '@/components/mentora/Header';
 import Footer from '@/components/mentora/Footer';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Info, AlertTriangle, MessageSquareQuote, Sparkles, MessageCircle } from 'lucide-react';
 import Image from 'next/image';
@@ -184,62 +183,55 @@ export default function HomeworkHelpPage() {
       />
       <main className="flex-grow container mx-auto py-8 md:py-12">
         <section className="grid md:grid-cols-2 gap-8 items-center mb-12 md:mb-16">
-          <Card className="w-full shadow-lg rounded-xl h-full">
-            <CardHeader className="text-center items-center pt-6 pb-4">
-              <MessageSquareQuote size={36} className="text-primary-foreground mb-3" />
-              <CardTitle className="font-headline text-2xl text-primary-foreground">
-                Ask Your Homework Question
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-6 pb-6 md:px-8 md:pb-8">
-              <div className="text-left space-y-5 mb-6 text-sm text-foreground/90">
-                <div className="p-4 bg-primary/10 rounded-lg border border-primary/30">
-                  <h3 className="text-md font-semibold text-primary-foreground flex items-center mb-2">
-                    <Info size={18} className="mr-2 text-accent flex-shrink-0" />
-                    How to use the bot:
-                  </h3>
-                  <ul className="list-disc list-inside pl-5 space-y-1 text-foreground/80">
-                    <li>Type your question in full (avoid just keywords).</li>
-                    <li>Ask concept-based or theory questions.</li>
-                    <li>The bot currently supports Physics, Chemistry, and English topics.</li>
-                  </ul>
-                </div>
-
-                <div className="p-4 bg-primary/10 rounded-lg border border-primary/30">
-                  <h3 className="text-md font-semibold text-primary-foreground flex items-center mb-2">
-                    <Sparkles size={18} className="mr-2 text-accent flex-shrink-0" /> Examples:
-                  </h3>
-                  <ul className="list-disc list-inside pl-5 space-y-1 text-foreground/80">
-                    <li>What is a catalyst?</li>
-                    <li>Explain molarity.</li>
-                    <li>What is a simile?</li>
-                  </ul>
-                </div>
-
-                <div className="flex items-start text-sm p-4 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive">
-                  <AlertTriangle size={20} className="mr-3 text-destructive flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-semibold">Important Note:</p>
-                    <p>
-                      The bot won’t solve numerical problems or math equations yet.
-                    </p>
-                  </div>
-                </div>
+          <div>
+            <h2 className="text-2xl md:text-3xl font-headline font-semibold text-primary-foreground mb-4">
+              Ask Your Homework Question
+            </h2>
+            <div className="space-y-5 mb-6 text-foreground/90">
+              <div className="p-4 bg-primary/10 rounded-lg border border-primary/30">
+                <h3 className="text-md font-semibold text-primary-foreground flex items-center mb-2">
+                  <Info size={18} className="mr-2 text-accent flex-shrink-0" />
+                  How to use the bot:
+                </h3>
+                <ul className="list-disc list-inside pl-5 space-y-1 text-foreground/80">
+                  <li>Type your question in full (avoid just keywords).</li>
+                  <li>Ask concept-based or theory questions.</li>
+                  <li>The bot currently supports Physics, Chemistry, and English topics.</li>
+                </ul>
               </div>
 
-              <div className="flex justify-center mt-8">
-                <Button 
-                  size="lg" 
-                  className="bg-accent hover:bg-accent/90 text-accent-foreground"
-                  onClick={handleAskQuestionClick}
-                  aria-label="Ask a homework question"
-                >
-                  <MessageCircle size={20} className="mr-2" />
-                  Ask a Question
-                </Button>
+              <div className="p-4 bg-primary/10 rounded-lg border border-primary/30">
+                <h3 className="text-md font-semibold text-primary-foreground flex items-center mb-2">
+                  <Sparkles size={18} className="mr-2 text-accent flex-shrink-0" /> Examples:
+                </h3>
+                <ul className="list-disc list-inside pl-5 space-y-1 text-foreground/80">
+                  <li>What is a catalyst?</li>
+                  <li>Explain molarity.</li>
+                  <li>What is a simile?</li>
+                </ul>
               </div>
-            </CardContent>
-          </Card>
+
+              <div className="flex items-start p-4 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive">
+                <AlertTriangle size={20} className="mr-3 text-destructive flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-sm">Important Note:</p>
+                  <p className="text-sm">
+                    The bot won’t solve numerical problems or math equations yet.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <Button 
+              size="lg" 
+              className="bg-accent hover:bg-accent/90 text-accent-foreground"
+              onClick={handleAskQuestionClick}
+              aria-label="Ask a homework question"
+            >
+              <MessageCircle size={20} className="mr-2" />
+              Ask a Question
+            </Button>
+          </div>
            <div>
             <Image 
               src="https://placehold.co/600x450.png" 

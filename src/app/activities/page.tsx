@@ -4,7 +4,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import Header from '@/components/mentora/Header';
 import Footer from '@/components/mentora/Footer';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Sparkles, ChevronRight, MessageSquareHeart, MessageCircle } from 'lucide-react';
 import Image from 'next/image';
@@ -193,52 +192,45 @@ export default function ActivitiesPage() {
       />
       <main className="flex-grow container mx-auto py-8 md:py-12">
         <section className="grid md:grid-cols-2 gap-8 items-center mb-12 md:mb-16">
-          <Card className="w-full shadow-lg rounded-xl h-full">
-            <CardHeader className="text-center items-center pt-6 pb-4">
-              <MessageSquareHeart size={36} className="text-primary-foreground mb-3" />
-              <CardTitle className="font-headline text-2xl text-primary-foreground">
-                Welcome to the Activities Assistant!
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-6 pb-6 md:px-8 md:pb-8 text-left">
-              <p className="text-foreground/90 mb-6 text-center md:text-left">
-                I can help you with details about past school events or guide you to register for upcoming ones. Just type things like:
-              </p>
-              
-              <div className="space-y-3 mb-6 p-4 bg-primary/10 rounded-lg border border-primary/30">
-                <h3 className="text-md font-semibold text-primary-foreground flex items-center mb-3">
-                  <Sparkles size={18} className="mr-2 text-accent flex-shrink-0" /> 
-                  Example Questions:
-                </h3>
-                <ul className="list-none space-y-2 text-foreground/80 pl-2">
-                  <li className="flex items-start">
-                    <ChevronRight size={16} className="mr-2 mt-1 text-accent flex-shrink-0" />
-                    <span>“List the events that already took place.”</span>
-                  </li>
-                  <li className="flex items-start">
-                    <ChevronRight size={16} className="mr-2 mt-1 text-accent flex-shrink-0" />
-                    <span>“Are there any activities lined up?”</span>
-                  </li>
-                </ul>
-              </div>
+          <div>
+            <h2 className="text-2xl md:text-3xl font-headline font-semibold text-primary-foreground mb-4">
+              Welcome to the Activities Assistant!
+            </h2>
+            <p className="text-lg text-foreground/85 mb-6">
+              I can help you with details about past school events or guide you to register for upcoming ones. Just type things like:
+            </p>
+            
+            <div className="space-y-3 mb-6 p-4 bg-primary/10 rounded-lg border border-primary/30">
+              <h3 className="text-md font-semibold text-primary-foreground flex items-center mb-3">
+                <Sparkles size={18} className="mr-2 text-accent flex-shrink-0" /> 
+                Example Questions:
+              </h3>
+              <ul className="list-none space-y-2 text-foreground/80 pl-2">
+                <li className="flex items-start">
+                  <ChevronRight size={16} className="mr-2 mt-1 text-accent flex-shrink-0" />
+                  <span>“List the events that already took place.”</span>
+                </li>
+                <li className="flex items-start">
+                  <ChevronRight size={16} className="mr-2 mt-1 text-accent flex-shrink-0" />
+                  <span>“Are there any activities lined up?”</span>
+                </li>
+              </ul>
+            </div>
 
-              <p className="text-center text-lg text-foreground/90 mt-8 mb-6">
-                I’m here to make sure you never miss out on what’s happening at school! 😊
-              </p>
+            <p className="text-lg text-foreground/85 mb-6">
+              I’m here to make sure you never miss out on what’s happening at school! 😊
+            </p>
 
-              <div className="flex justify-center mt-8">
-                <Button 
-                  size="lg" 
-                  className="bg-accent hover:bg-accent/90 text-accent-foreground"
-                  onClick={handleAskButtonClick}
-                  aria-label="Ask about activities"
-                >
-                  <MessageCircle size={20} className="mr-2" />
-                  Ask About Activities
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+            <Button 
+              size="lg" 
+              className="bg-accent hover:bg-accent/90 text-accent-foreground"
+              onClick={handleAskButtonClick}
+              aria-label="Ask about activities"
+            >
+              <MessageCircle size={20} className="mr-2" />
+              Ask About Activities
+            </Button>
+          </div>
           <div>
             <Image 
               src="https://placehold.co/600x450.png" 
