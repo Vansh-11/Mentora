@@ -1,4 +1,5 @@
 
+import { unstable_noStore as noStore } from 'next/cache';
 import DashboardClient from './DashboardClient';
 import type { Metadata } from 'next';
 import { db } from '@/lib/firebase-admin';
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
 };
 
 async function fetchCollection(collectionName: string) {
+  noStore();
   if (!db) {
     console.warn(`Firestore not initialized, cannot fetch ${collectionName}.`);
     return [];
@@ -34,6 +36,7 @@ async function fetchCollection(collectionName: string) {
 }
 
 async function fetchUsers() {
+    noStore();
     if (!db) {
         console.warn('Firestore not initialized, cannot fetch users.');
         return [];
