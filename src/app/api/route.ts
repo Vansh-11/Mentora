@@ -22,20 +22,18 @@ async function saveToFirestore(collection: string, data: any) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    // More detailed logging as requested
     console.log('--- Dialogflow Webhook Request ---');
     console.log('Body:', JSON.stringify(body, null, 2));
 
     const intentName = body.queryResult?.intent?.displayName || 'Unknown Intent';
     const parameters = body.queryResult?.parameters || {};
     const timestamp = admin.firestore.FieldValue.serverTimestamp();
-    
+
     console.log(`Intent Triggered: ${intentName}`);
     console.log('Parameters Received:', JSON.stringify(parameters, null, 2));
 
     let fulfillmentText = "Your request has been received, but the intent was not handled by the webhook.";
 
-    // --- Handle Event Registration for Coding Hackathon only ---
     if (intentName === 'register_CH') {
       const eventName = "Coding Hackathon";
 
@@ -55,22 +53,29 @@ export async function POST(request: NextRequest) {
 
       await saveToFirestore('registrations', registrationData);
 
-      fulfillmentText = `Thank you, ${registrationData.fullName}. Your registration for ${eventName} has been submitted. Your registration data has been sent to the event coordinator.`;
+      const thankYou = `Thank you, ${registrationData.fullName}. Your registration for ${eventName} has been submitted.`;
+      const confirmation = `Your registration data has been sent to the event coordinator.`;
+
+      fulfillmentText = thankYou + " " + confirmation;
+
+      return NextResponse.json({
+        fulfillmentText,
+        fulfillmentMessages: [
+          { text: { text: [thankYou] } },
+          { text: { text: [confirmation] } }
+        ],
+      }, { status: 200 });
     } else {
       console.log(`Received unhandled intent: ${intentName}`);
     }
 
-    console.log(`Sending fulfillmentText: "${fulfillmentText}"`);
+    console.log(`Sending fallback fulfillmentText: "${fulfillmentText}"`);
 
-    // --- Format response to explicitly override Dialogflow's static responses ---
-    // This structure ensures that Dialogflow uses this response instead of any defaults.
     return NextResponse.json({
       fulfillmentText,
       fulfillmentMessages: [
         {
-          text: {
-            text: [fulfillmentText],
-          },
+          text: { text: [fulfillmentText] },
         },
       ],
     }, { status: 200 });
@@ -79,16 +84,13 @@ export async function POST(request: NextRequest) {
     console.error('--- ERROR IN WEBHOOK ---');
     console.error('Error message:', error.message);
     console.error('Error stack:', error.stack);
-    
+
     const errorMessage = 'An error occurred while processing your request in the webhook. Please check the server logs.';
-    
-    // Send a clear error message back to Dialogflow
+
     return NextResponse.json({
       fulfillmentText: errorMessage,
       fulfillmentMessages: [{
-        text: {
-          text: [errorMessage],
-        },
+        text: { text: [errorMessage] },
       }],
     }, { status: 500 });
   }
