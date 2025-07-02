@@ -1,4 +1,3 @@
-
 'use server';
 
 import { revalidatePath } from 'next/cache';
@@ -15,41 +14,6 @@ function ensureAuth() {
 }
 
 /**
- * Updates the status of a report in a given collection.
- * @param collectionName The name of the Firestore collection.
- * @param docId The ID of the document to update.
- * @param newStatus The new status to set ('New' or 'Reviewed').
- */
-export async function updateReportStatus(collectionName: string, docId: string, newStatus: 'New' | 'Reviewed') {
-  const db = ensureDb();
-  try {
-    await db.collection(collectionName).doc(docId).update({ status: newStatus });
-    revalidatePath('/admin/dashboard');
-    return { success: true, message: `Report status updated to ${newStatus}.` };
-  } catch (error) {
-    console.error(`Failed to update status for doc ${docId} in ${collectionName}:`, error);
-    return { success: false, message: 'Failed to update report status.' };
-  }
-}
-
-/**
- * Deletes a report from a given collection.
- * @param collectionName The name of the Firestore collection.
- * @param docId The ID of the document to delete.
- */
-export async function deleteReport(collectionName: string, docId: string) {
-  const db = ensureDb();
-  try {
-    await db.collection(collectionName).doc(docId).delete();
-    revalidatePath('/admin/dashboard');
-    return { success: true, message: 'Report deleted successfully.' };
-  } catch (error) {
-    console.error(`Failed to delete doc ${docId} from ${collectionName}:`, error);
-    return { success: false, message: 'Failed to delete report.' };
-  }
-}
-
-/**
  * Sends a password reset email to the given email address.
  * @param email The admin's email address.
  */
@@ -63,7 +27,6 @@ export async function sendPasswordReset(email: string) {
         return { success: false, message: error.message || 'Failed to send password reset email.' };
     }
 }
-
 
 /**
  * Demotes an admin user to a student role.

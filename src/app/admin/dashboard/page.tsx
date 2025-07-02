@@ -59,28 +59,16 @@ async function fetchUsers() {
 
 export default async function AdminDashboardPage() {
   const [
-    registrations, 
-    bullyingReports, 
-    emotionalHealthReports, 
-    schoolIncidentReports, 
-    otherConcernsReports,
+    registrations,
     users
     ] = await Promise.all([
         fetchCollection('registrations'),
-        fetchCollection('bullyingReports'),
-        fetchCollection('emotionalHealthReports'),
-        fetchCollection('schoolIncidentReports'),
-        fetchCollection('otherConcernsReports'),
         fetchUsers()
     ]);
   
   return (
     <DashboardClient
       registrations={registrations}
-      bullyingReports={bullyingReports}
-      emotionalHealthReports={emotionalHealthReports}
-      schoolIncidentReports={schoolIncidentReports}
-      otherConcernsReports={otherConcernsReports}
       users={users}
     />
   );

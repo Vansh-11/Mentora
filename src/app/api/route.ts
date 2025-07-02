@@ -28,25 +28,11 @@ export async function POST(request: NextRequest) {
 
     const intentName = body.queryResult?.intent?.displayName || 'Unknown Intent';
     const parameters = body.queryResult?.parameters || {};
-    const timestamp = admin.firestore.FieldValue.serverTimestamp(); // Use server timestamp for consistency
+    const timestamp = admin.firestore.FieldValue.serverTimestamp();
     let fulfillmentText = body.queryResult?.fulfillmentText || "Your request has been received.";
-
-    // --- Standard Report Data Structure ---
-    // All reports will share this structure for consistency in the admin dashboard.
-    const createReportData = () => ({
-        timestamp,
-        intentName,
-        fullName: parameters.fullName || 'Not provided',
-        email: parameters.email || 'Not provided',
-        classSection: parameters.classSection || 'Not provided',
-        details: parameters.details || body.queryResult?.queryText || 'No details provided',
-        status: 'New' as const, // All new reports are marked as 'New'
-    });
     
-    switch (intentName) {
-      // --- Event Registration Intent ---
-      case 'EventRegistrationIntent':
-        // Normalize the event name to ensure consistency with dashboard data.
+    // --- Only handle Event Registration Intent ---
+    if (intentName === 'EventRegistrationIntent') {
         let eventName = parameters.eventName || 'General Event';
         if (eventName.toLowerCase().includes('hackathon')) {
             eventName = 'Coding Hackathon';
@@ -62,34 +48,8 @@ export async function POST(request: NextRequest) {
         };
         await saveToFirestore('registrations', registrationData);
         fulfillmentText = `Thank you, ${registrationData.fullName}. Your registration for ${registrationData.eventName} has been submitted.`;
-        break;
-
-      // --- Report Intents ---
-      case 'BullyingReportIntent':
-        await saveToFirestore('bullyingReports', createReportData());
-        fulfillmentText = "Thank you for reaching out. Your confidential report has been submitted and will be reviewed shortly.";
-        break;
-
-      case 'EmotionalHealthReportIntent':
-        await saveToFirestore('emotionalHealthReports', createReportData());
-        fulfillmentText = "Thank you for sharing. Your confidential report has been received. Please remember to talk to a trusted adult if you need immediate support.";
-        break;
-
-      case 'SchoolIncidentReportIntent':
-        await saveToFirestore('schoolIncidentReports', createReportData());
-        fulfillmentText = "Thank you. Your incident report has been submitted and will be reviewed by the appropriate staff.";
-        break;
-
-      case 'OtherConcernsReportIntent':
-         await saveToFirestore('otherConcernsReports', createReportData());
-         fulfillmentText = "Thank you for letting us know. Your report has been submitted and will be reviewed.";
-         break;
-
-      // --- Default Case for Unhandled Intents ---
-      default:
-        console.log(`Received unhandled intent: ${intentName}`);
-        // The default fulfillmentText is used here.
-        break;
+    } else {
+        console.log(`Received unhandled intent, passing through: ${intentName}`);
     }
 
     // --- Successful Response to Dialogflow ---

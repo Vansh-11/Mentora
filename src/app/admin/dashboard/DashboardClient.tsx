@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useTransition } from 'react';
@@ -6,32 +5,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ShieldAlert, HeartPulse, Siren, MessageSquareQuote, Trash2, CheckCircle, Circle, FileDown, ArrowLeft, MoreHorizontal, Users, LogOut, Settings as SettingsIcon } from 'lucide-react';
+import { FileDown } from 'lucide-react';
 import { format } from 'date-fns';
-import { updateReportStatus, deleteReport, sendPasswordReset, demoteAdmin } from '../actions';
+import { sendPasswordReset, demoteAdmin } from '../actions';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/contexts/AuthContext';
-import { signOut } from 'firebase/auth';
-import { auth as firebaseAuth } from '@/lib/firebase';
-import { useRouter } from 'next/navigation';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import papaparse from 'papaparse';
-
-interface Report {
-    id: string;
-    timestamp: string;
-    status: 'New' | 'Reviewed';
-    fullName?: string;
-    email?: string;
-    classSection?: string;
-    details?: string;
-    [key: string]: any;
-}
 
 interface Registration {
     id: string;
@@ -51,35 +35,14 @@ interface User {
 
 interface DashboardClientProps {
     registrations: Registration[];
-    bullyingReports: Report[];
-    emotionalHealthReports: Report[];
-    schoolIncidentReports: Report[];
-    otherConcernsReports: Report[];
     users: User[];
 }
 
-const reportCategories = [
-    { id: 'bullying', title: 'Bullying Reports', icon: ShieldAlert, dataKey: 'bullyingReports' },
-    { id: 'emotional', title: 'Emotional Health Reports', icon: HeartPulse, dataKey: 'emotionalHealthReports' },
-    { id: 'incident', title: 'School Incident Reports', icon: Siren, dataKey: 'schoolIncidentReports' },
-    { id: 'other', title: 'Other Concerns', icon: MessageSquareQuote, dataKey: 'otherConcernsReports' },
-];
-
 export default function DashboardClient(props: DashboardClientProps) {
-    const [activeReportCategory, setActiveReportCategory] = useState<string | null>(null);
-    const [searchTerm, setSearchTerm] = useState("");
     const [isPending, startTransition] = useTransition();
     const { toast } = useToast();
-    const router = useRouter();
     const { user: adminUser } = useAuth();
 
-    const allReports: { [key: string]: Report[] } = {
-        bullyingReports: props.bullyingReports,
-        emotionalHealthReports: props.emotionalHealthReports,
-        schoolIncidentReports: props.schoolIncidentReports,
-        otherConcernsReports: props.otherConcernsReports
-    };
-    
     // --- Generic Action Handler ---
     const handleAction = (action: () => Promise<{success: boolean, message: string}>) => {
         startTransition(async () => {
@@ -90,16 +53,6 @@ export default function DashboardClient(props: DashboardClientProps) {
                 variant: result.success ? "default" : "destructive",
             });
         });
-    };
-    
-    // --- Report Actions ---
-    const handleDelete = (collectionName: string, id: string) => {
-        if (!confirm('Are you sure? This action cannot be undone.')) return;
-        handleAction(() => deleteReport(collectionName, id));
-    };
-
-    const handleStatusChange = (collectionName: string, id: string, status: 'New' | 'Reviewed') => {
-        handleAction(() => updateReportStatus(collectionName, id, status));
     };
 
     // --- Data Export ---
@@ -130,89 +83,6 @@ export default function DashboardClient(props: DashboardClientProps) {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-    };
-
-    // --- Component: Report Table ---
-    const ReportTable = ({ reports, collectionName, title }: { reports: Report[], collectionName: string, title: string }) => {
-        const filteredReports = reports.filter(r => 
-            (r.details || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (r.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (r.email || '').toLowerCase().includes(searchTerm.toLowerCase())
-        );
-
-        const columns = [
-            { header: 'Name', key: 'fullName' },
-            { header: 'Email', key: 'email' },
-            { header: 'Class', key: 'classSection' },
-            { header: 'Report', key: 'details' },
-        ];
-
-        return (
-            <div>
-                 <div className="flex items-center gap-4 mb-4">
-                    <Button variant="outline" size="icon" onClick={() => setActiveReportCategory(null)}>
-                        <ArrowLeft className="h-4 w-4" />
-                    </Button>
-                    <h2 className="text-2xl font-bold">{title} ({filteredReports.length})</h2>
-                 </div>
-                 <div className="flex items-center gap-4 mb-4">
-                    <Input
-                        placeholder="Search reports..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="max-w-sm"
-                    />
-                     <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="ml-auto">
-                                <FileDown className="h-4 w-4 mr-2" /> Export
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            <DropdownMenuItem onClick={() => exportToPDF(filteredReports, title, [...columns.map(c=>c.header), 'Status', 'Submitted'], [...columns.map(c=>c.key), 'status', 'timestamp'])}>Export as PDF</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => exportToCSV(filteredReports, title)}>Export as CSV</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                 </div>
-                 <div className="border rounded-lg">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                {columns.map(c => <TableHead key={c.key}>{c.header}</TableHead>)}
-                                <TableHead>Status</TableHead>
-                                <TableHead>Submitted</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filteredReports.length > 0 ? filteredReports.map(item => (
-                                <TableRow key={item.id}>
-                                    {columns.map(c => <TableCell key={c.key} className={c.key === 'details' ? 'min-w-[300px]' : ''}>{item[c.key] || 'N/A'}</TableCell>)}
-                                    <TableCell><Badge variant={item.status === 'New' ? 'destructive' : 'secondary'}>{item.status}</Badge></TableCell>
-                                    <TableCell>{format(new Date(item.timestamp), "PPp")}</TableCell>
-                                    <TableCell className="text-right">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" disabled={isPending}><MoreHorizontal className="h-4 w-4"/></Button></DropdownMenuTrigger>
-                                            <DropdownMenuContent>
-                                                <DropdownMenuItem onClick={() => handleStatusChange(collectionName, item.id, item.status === 'New' ? 'Reviewed' : 'New')}>
-                                                    {item.status === 'New' ? <CheckCircle className="mr-2 h-4 w-4" /> : <Circle className="mr-2 h-4 w-4" />}
-                                                    Mark as {item.status === 'New' ? 'Reviewed' : 'New'}
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(collectionName, item.id)}>
-                                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </TableCell>
-                                </TableRow>
-                            )) : (
-                                <TableRow><TableCell colSpan={columns.length + 3} className="text-center h-24">No reports found.</TableCell></TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                 </div>
-            </div>
-        )
     };
 
     // --- Component: Events Tab ---
@@ -396,45 +266,11 @@ export default function DashboardClient(props: DashboardClientProps) {
 
     // --- Main Render ---
     return (
-        <Tabs defaultValue="reports">
-            <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="reports">Reports</TabsTrigger>
+        <Tabs defaultValue="registrations">
+            <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="registrations">Event Registrations</TabsTrigger>
                 <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
-            <TabsContent value="reports" className="mt-6">
-                {activeReportCategory ? (
-                    <ReportTable
-                        reports={allReports[reportCategories.find(c => c.id === activeReportCategory)!.dataKey]}
-                        collectionName={reportCategories.find(c => c.id === activeReportCategory)!.dataKey}
-                        title={reportCategories.find(c => c.id === activeReportCategory)!.title}
-                    />
-                ) : (
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                        {reportCategories.map(cat => (
-                            <Card 
-                                key={cat.id} 
-                                className="cursor-pointer hover:bg-muted/50 transition-colors"
-                                onClick={() => {
-                                    setSearchTerm("");
-                                    setActiveReportCategory(cat.id);
-                                }}
-                            >
-                                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                                    <CardTitle className="text-sm font-medium">{cat.title}</CardTitle>
-                                    <cat.icon className="h-4 w-4 text-muted-foreground" />
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-2xl font-bold">{allReports[cat.dataKey].length}</div>
-                                    <p className="text-xs text-muted-foreground">
-                                        {allReports[cat.dataKey].filter(r => r.status === 'New').length} new reports
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                )}
-            </TabsContent>
             <TabsContent value="registrations" className="mt-6">
                 <EventsTab />
             </TabsContent>
@@ -454,5 +290,3 @@ declare global {
         msSaveBlob?: (blob: any, defaultName?: string) => boolean
     }
 }
-
-    
