@@ -25,19 +25,13 @@ function initializeFirebaseAdmin() {
   }
 
   try {
-    const serviceAccountJson = process.env.FIREBASE_ADMIN_SDK_JSON;
-    if (serviceAccountJson) {
-        // Use environment variable when deployed
-        admin.initializeApp({
-            credential: admin.credential.cert(JSON.parse(serviceAccountJson)),
-        });
-    } else {
-        // Use hardcoded credentials for local development
-        console.warn('FIREBASE_ADMIN_SDK_JSON not found. Using hardcoded service account for local development. THIS IS NOT FOR PRODUCTION USE.');
-        admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
-        });
-    }
+    // Always use the hardcoded service account to ensure consistency
+    // across local development and deployed environments.
+     admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+    });
+    console.log("Firebase Admin SDK initialized successfully using hardcoded credentials.");
+
   } catch (error: any) {
     console.error('Firebase Admin SDK initialization error:', error.stack);
   }
