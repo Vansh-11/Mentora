@@ -4,7 +4,7 @@ import Footer from '@/components/mentora/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MessageSquareText, NotebookPen, CalendarDays, Zap } from 'lucide-react';
+import { MessageSquareText, NotebookPen, CalendarDays, Zap, Shield } from 'lucide-react';
 
 interface CardData {
   href: string;
@@ -23,7 +23,7 @@ const cardData: CardData[] = [
   {
     href: '/homework-help',
     title: 'Homework Help',
-    description: 'Get assistance with challenging subjects like Physics, Chemistry, Maths, and English.',
+    description: 'Get assistance with challenging subjects like Physics, Chemistry, and English.',
     icon: NotebookPen,
   },
   {
@@ -32,6 +32,12 @@ const cardData: CardData[] = [
     description: 'View upcoming and completed school events. Register for activities and see event details.',
     icon: CalendarDays,
   },
+  {
+    href: '/bullying-help',
+    title: 'Bullying Support',
+    description: 'Get help and support for bullying situations in a confidential space.',
+    icon: Shield,
+  },
 ];
 
 export default function Home() {
@@ -39,7 +45,7 @@ export default function Home() {
     <div className="flex flex-col min-h-screen bg-background">
       <Header 
         isHomePage={true} 
-        title="👋 Welcome to Mentora Hub"
+        title="Welcome to Mentora Hub"
         subtitle="Your All-in-One Student Support Companion"
         description="Navigate through our services for mental well-being, academic assistance, and exploring school activities. Mentora is here to help you thrive."
       />
@@ -49,7 +55,7 @@ export default function Home() {
           <p className="text-lg text-foreground/90 max-w-2xl mx-auto mb-8">
             Mentora offers a range of tools to support your student life. Click on a feature below to learn more and get started.
           </p>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {cardData.map((card) => {
               const Icon = card.icon;
               return (
