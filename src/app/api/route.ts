@@ -3,30 +3,38 @@ import { type NextRequest, NextResponse } from 'next/server';
 import * as admin from 'firebase-admin';
 
 // --- Firebase Admin SDK Initialization ---
-// Initialize Firebase Admin SDK only on the server and if not already initialized
-if (typeof window === 'undefined' && !admin.apps.length) { // Check if in server environment and not already initialized
+if (!admin.apps.length) {
   try {
-    // Read service account key JSON directly from environment variable
-    if (process.env.FIREBASE_ADMIN_SDK_JSON) {
-      const serviceAccount = JSON.parse(
-        process.env.FIREBASE_ADMIN_SDK_JSON as string
-      );
-
+    const serviceAccountJson = process.env.FIREBASE_ADMIN_SDK_JSON;
+    if (serviceAccountJson) {
+      const serviceAccount = JSON.parse(serviceAccountJson);
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
       });
-      console.log('Firebase Admin SDK initialized with service account credentials.');
+      console.log('Firebase Admin SDK initialized successfully.');
     } else {
-      admin.initializeApp();
-      console.log('Firebase Admin SDK initialized with default credentials.');
+      console.warn('FIREBASE_ADMIN_SDK_JSON not set. Firebase Admin features will be disabled.');
     }
   } catch (error: any) {
     console.error('Firebase Admin SDK initialization error:', error.stack);
   }
 }
 
-const db = admin.firestore();
+const db = admin.apps.length ? admin.firestore() : null;
 
+async function saveToFirestore(collection: string, data: any) {
+  if (!db) {
+    console.warn('Firestore is not initialized. Skipping save.');
+    return;
+  }
+  try {
+    const docRef = await db.collection(collection).add(data);
+    console.log(`Data saved to ${collection} with ID:`, docRef.id);
+  } catch (firestoreError: any) {
+    console.error(`Error saving to ${collection}:`, firestoreError);
+    // Optionally re-throw or handle as needed
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,79 +43,55 @@ export async function POST(request: NextRequest) {
 
     const queryText = body.queryResult?.queryText || '';
     const intentName = body.queryResult?.intent?.displayName || 'Unknown Intent';
-    const timestamp = new Date().toISOString();
+    const timestamp = new Date();
     const parameters = body.queryResult?.parameters || {};
+    let fulfillmentText = body.queryResult?.fulfillmentText || "Your request has been received.";
 
-    const parsedName = parameters.fullName || 'Not provided';
-    const parsedClassSection = parameters.classSection || 'Not provided';
-    const parsedRollNumber = parameters.rollNumber ? String(parameters.rollNumber) : 'Not provided';
-    const parsedContactNumber = parameters.contactNumber || 'Not provided';
-    const parsedExperience = parameters.codingExperience || 'Not provided';
+    switch (intentName) {
+      case 'EventRegistrationIntent': // Or whatever your registration intent is named
+        const registrationData = {
+          timestamp,
+          intentName,
+          fullName: parameters.fullName || 'Not provided',
+          classSection: parameters.classSection || 'Not provided',
+          rollNumber: parameters.rollNumber ? String(parameters.rollNumber) : 'Not provided',
+          contactNumber: parameters.contactNumber || 'Not provided',
+          codingExperience: parameters.codingExperience || 'Not provided',
+          originalQuery: queryText,
+          status: 'new',
+        };
+        await saveToFirestore('registrations', registrationData);
+        fulfillmentText = `Thank you, ${registrationData.fullName}. Your registration for the event has been submitted.`;
+        break;
 
-    console.log(`Registration Received:
-- Full Name: ${parsedName}
-- Class & Section: ${parsedClassSection}
-- Roll Number: ${parsedRollNumber}
-- Contact Number: ${parsedContactNumber}
-- Coding Experience: ${parsedExperience}`);
+      case 'BullyingReportIntent': // Assumed intent name for bullying reports
+        const bullyingReportData = {
+          timestamp,
+          intentName,
+          details: parameters.report_details || queryText || 'No details provided', // Assuming a 'report_details' parameter
+          status: 'new',
+        };
+        await saveToFirestore('bullyingReports', bullyingReportData);
+        fulfillmentText = "Thank you for reaching out. Your report has been submitted confidentially. A counselor will review it shortly.";
+        break;
 
-    const registrationData = {
-      timestamp,
-      intentName,
-      fullName: parsedName,
-      classSection: parsedClassSection,
-      rollNumber: parsedRollNumber,
-      contactNumber: parsedContactNumber,
-      codingExperience: parsedExperience,
-      originalQuery: queryText,
-    };
+      case 'CyberSecurityReportIntent': // Assumed intent name for cyber security reports
+        const cyberReportData = {
+          timestamp,
+          intentName,
+          details: parameters.report_details || queryText || 'No details provided',
+          status: 'new',
+        };
+        await saveToFirestore('cyberSecurityReports', cyberReportData);
+        fulfillmentText = "Thank you for your report. It has been submitted to the security team for review.";
+        break;
 
-    // Save to Firestore
-    if (admin.apps.length && db) {
-      try {
-        const docRef = await db.collection('registrations').add(registrationData);
-        console.log('Registration data saved to Firestore with ID:', docRef.id);
-      } catch (firestoreError: any) {
-        console.error('Error saving registration to Firestore:', firestoreError);
-      }
-    } else {
-      console.warn('Firestore Admin SDK not initialized or db object is null. Skipping Firestore save.');
-    }
+      // Add other cases for different intents as needed
 
-    let fulfillmentText = '';
-
-    const allProvided = [
-      parsedName,
-      parsedClassSection,
-      parsedRollNumber,
-      parsedContactNumber,
-      parsedExperience
-    ].every(val => val !== 'Not provided');
-
-    if (allProvided) {
-        const eventName = intentName === 'EventRegistrationIntent' ? 'Coding Hackathon' : intentName;
-        
-        fulfillmentText = `Thank you! We've received the following registration details for event: ${eventName}: \n
- Full Name: ${parsedName} \n
- Class & Section: ${parsedClassSection} \n
- Roll Number: ${parsedRollNumber} \n
- Contact Number: ${parsedContactNumber} \n
- Coding Experience: ${parsedExperience} \n
-
-We will process your registration.\n`;
-    } else {
-      // Check if it's a known intent that expects parameters, not a general welcome/fallback intent
-      const parameterCollectionIntents = ['EventRegistrationIntent', 'CodingWorkshopRegistration']; // Add your actual intent names here
-      if (parameterCollectionIntents.includes(intentName) || (intentName !== 'Unknown Intent' && intentName !== 'Default Welcome Intent' && intentName !== 'Welcome')) {
-        fulfillmentText = `It seems some details might be missing for your registration for "${intentName}". Please ensure all information is provided. We received:
-- Full Name: ${parsedName}
-- Class & Section: ${parsedClassSection}
-- Roll Number: ${parsedRollNumber}
-- Contact Number: ${parsedContactNumber}
-- Coding Experience: ${parsedExperience}`;
-      } else {
-        fulfillmentText = body.queryResult?.fulfillmentText || "Request received. How else can I help you today?";
-      }
+      default:
+        console.log(`Received unhandled intent: ${intentName}`);
+        // Default fulfillment text is already set
+        break;
     }
 
     return NextResponse.json({
