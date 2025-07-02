@@ -1,3 +1,4 @@
+'use client';
 
 import type { ReactNode } from 'react';
 import { BotMessageSquare, Home as HomeIcon, LogIn, LogOut } from 'lucide-react';
