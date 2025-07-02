@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 
       await saveToFirestore('registrations', registrationData);
 
-      fulfillmentText = `Thank you, ${registrationData.fullName}. Your registration for ${eventName} has been submitted. This confirmation is from the webhook.`;
+      fulfillmentText = `Thank you, ${registrationData.fullName}. Your registration for ${eventName} has been submitted. Your registration data has been sent to the event coordinator.`;
     } else {
       console.log(`Received unhandled intent: ${intentName}`);
     }
