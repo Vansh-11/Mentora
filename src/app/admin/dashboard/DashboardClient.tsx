@@ -218,7 +218,16 @@ export default function DashboardClient(props: DashboardClientProps) {
     // --- Component: Events Tab ---
     const EventsTab = () => {
         const [eventSearch, setEventSearch] = useState("");
-        const events = props.registrations.reduce((acc, reg) => {
+
+        const staticEvents = [
+            {
+                name: 'Coding Hackathon',
+                date: '15 July 2025',
+                description: 'The Inter-School Coding Hackathon is a thrilling event where students collaborate to solve real-world problems. Open to all coding enthusiasts, it promotes creativity, teamwork, and innovation. Prizes will be awarded to the most outstanding solutions. Don’t miss it!',
+            }
+        ];
+
+        const registrationsByEvent = props.registrations.reduce((acc, reg) => {
             const eventName = reg.eventName || 'General Event';
             if (!acc[eventName]) {
                 acc[eventName] = [];
@@ -227,7 +236,20 @@ export default function DashboardClient(props: DashboardClientProps) {
             return acc;
         }, {} as Record<string, Registration[]>);
 
-        const filteredEvents = Object.entries(events).filter(([eventName]) => eventName.toLowerCase().includes(eventSearch.toLowerCase()));
+        const allEventNames = [...new Set([...staticEvents.map(e => e.name), ...Object.keys(registrationsByEvent)])];
+        
+        const events = allEventNames.map(eventName => {
+            const staticEventData = staticEvents.find(e => e.name === eventName);
+            const eventRegistrations = registrationsByEvent[eventName] || [];
+            return {
+                name: eventName,
+                date: staticEventData?.date || 'N/A',
+                description: staticEventData?.description || 'Details not available.',
+                registrations: eventRegistrations,
+            };
+        });
+
+        const filteredEvents = events.filter(event => event.name.toLowerCase().includes(eventSearch.toLowerCase()));
 
         return (
             <div>
@@ -239,25 +261,54 @@ export default function DashboardClient(props: DashboardClientProps) {
                 />
                 <div className="border rounded-lg">
                      <Table>
-                        <TableHeader><TableRow><TableHead>Event Name</TableHead><TableHead>Registrations</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Event Name</TableHead>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Registrations</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
                         <TableBody>
-                            {filteredEvents.length > 0 ? filteredEvents.map(([eventName, registrations]) => (
-                                <TableRow key={eventName}>
-                                    <TableCell className="font-medium">{eventName}</TableCell>
-                                    <TableCell>{registrations.length}</TableCell>
+                            {filteredEvents.length > 0 ? filteredEvents.map((event) => (
+                                <TableRow key={event.name}>
+                                    <TableCell className="font-medium">
+                                        <Dialog>
+                                            <DialogTrigger asChild>
+                                                <span className="cursor-pointer hover:underline">{event.name}</span>
+                                            </DialogTrigger>
+                                            <DialogContent className="max-w-xl">
+                                                <DialogHeader>
+                                                    <DialogTitle>{event.name}</DialogTitle>
+                                                    <CardDescription>{event.date}</CardDescription>
+                                                </DialogHeader>
+                                                <p className="py-4 text-sm text-muted-foreground">{event.description}</p>
+                                            </DialogContent>
+                                        </Dialog>
+                                    </TableCell>
+                                    <TableCell>{event.date}</TableCell>
+                                    <TableCell>{event.registrations.length}</TableCell>
                                     <TableCell className="text-right">
                                         <Dialog>
-                                            <DialogTrigger asChild><Button variant="outline">View Registrations</Button></DialogTrigger>
+                                            <DialogTrigger asChild>
+                                                <Button variant="outline" disabled={event.registrations.length === 0}>
+                                                    View Registrations
+                                                </Button>
+                                            </DialogTrigger>
                                             <DialogContent className="max-w-4xl">
                                                 <DialogHeader>
-                                                    <DialogTitle>Registrations for: {eventName}</DialogTitle>
+                                                    <DialogTitle>Registrations for: {event.name}</DialogTitle>
                                                 </DialogHeader>
                                                 <div className="flex items-center gap-4 my-4">
                                                     <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild><Button variant="outline" className="ml-auto"><FileDown className="h-4 w-4 mr-2" />Export</Button></DropdownMenuTrigger>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="outline" className="ml-auto" disabled={event.registrations.length === 0}>
+                                                                <FileDown className="h-4 w-4 mr-2" />Export
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
                                                         <DropdownMenuContent>
-                                                            <DropdownMenuItem onClick={() => exportToPDF(registrations, eventName, ['Name', 'Email', 'Class', 'Registered On'], ['fullName', 'email', 'classSection', 'timestamp'])}>Export as PDF</DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => exportToCSV(registrations, eventName)}>Export as CSV</DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => exportToPDF(event.registrations, event.name, ['Name', 'Email', 'Class', 'Registered On'], ['fullName', 'email', 'classSection', 'timestamp'])}>Export as PDF</DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => exportToCSV(event.registrations, event.name)}>Export as CSV</DropdownMenuItem>
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
                                                 </div>
@@ -265,9 +316,16 @@ export default function DashboardClient(props: DashboardClientProps) {
                                                     <Table>
                                                         <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Email</TableHead><TableHead>Class</TableHead><TableHead>Registered On</TableHead></TableRow></TableHeader>
                                                         <TableBody>
-                                                            {registrations.map(reg => (
-                                                                <TableRow key={reg.id}><TableCell>{reg.fullName}</TableCell><TableCell>{reg.email}</TableCell><TableCell>{reg.classSection}</TableCell><TableCell>{format(new Date(reg.timestamp), "PPp")}</TableCell></TableRow>
-                                                            ))}
+                                                            {event.registrations.length > 0 ? event.registrations.map(reg => (
+                                                                <TableRow key={reg.id}>
+                                                                    <TableCell>{reg.fullName}</TableCell>
+                                                                    <TableCell>{reg.email}</TableCell>
+                                                                    <TableCell>{reg.classSection}</TableCell>
+                                                                    <TableCell>{format(new Date(reg.timestamp), "PPp")}</TableCell>
+                                                                </TableRow>
+                                                            )) : (
+                                                                <TableRow><TableCell colSpan={4} className="h-24 text-center">No registrations for this event yet.</TableCell></TableRow>
+                                                            )}
                                                         </TableBody>
                                                     </Table>
                                                 </div>
@@ -276,7 +334,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                                     </TableCell>
                                 </TableRow>
                             )) : (
-                                <TableRow><TableCell colSpan={3} className="text-center h-24">No events found.</TableCell></TableRow>
+                                <TableRow><TableCell colSpan={4} className="text-center h-24">No events found.</TableCell></TableRow>
                             )}
                         </TableBody>
                      </Table>
@@ -287,7 +345,7 @@ export default function DashboardClient(props: DashboardClientProps) {
 
     // --- Component: Settings Tab ---
     const SettingsTab = () => {
-        const admins = props.users; // No need to filter, props.users is now only admins
+        const admins = props.users; 
         return (
             <div className="space-y-8 max-w-2xl">
                 <Card>
@@ -396,3 +454,5 @@ declare global {
         msSaveBlob?: (blob: any, defaultName?: string) => boolean
     }
 }
+
+    
