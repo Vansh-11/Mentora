@@ -21,6 +21,7 @@ import { auth, db } from '@/lib/firebase';
 import { doc, getDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { BotMessageSquare } from "lucide-react";
+import Link from "next/link";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -44,7 +45,6 @@ export default function LoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
 
-      // Fetch user role from Firestore
       const userDocRef = doc(db, 'users', user.uid);
       const docSnap = await getDoc(userDocRef);
 
@@ -53,7 +53,7 @@ export default function LoginPage() {
         router.push('/admin/dashboard');
       } else {
         toast({ title: "Success", description: "Logged in successfully." });
-        router.push('/');
+        router.push('/home');
       }
     } catch (error: any) {
       console.error("Login failed:", error);
@@ -109,6 +109,12 @@ export default function LoginPage() {
               </Button>
             </form>
           </Form>
+           <div className="mt-4 text-center text-sm">
+            Don&apos;t have an account?{" "}
+            <Link href="/signup" className="underline">
+              Sign up
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>

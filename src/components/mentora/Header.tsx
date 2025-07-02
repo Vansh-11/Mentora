@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { ReactNode } from 'react';
@@ -24,7 +25,7 @@ export default function Header({
   showChatbotIcon = true,
   isHomePage = false,
 }: HeaderProps) {
-  const { user, role } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -58,7 +59,7 @@ export default function Header({
         
         {!isHomePage && (
           <div className="absolute top-4 left-4 md:top-6 md:left-6 z-10">
-            <Link href="/" onClick={handleHomeClick}>
+            <Link href="/home" onClick={handleHomeClick}>
               <Button variant="outline" size="icon" aria-label="Go to homepage" className="bg-card hover:bg-card/90">
                 <HomeIcon className="h-5 w-5 text-card-foreground" />
               </Button>
