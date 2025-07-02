@@ -42,13 +42,16 @@ async function fetchUsers() {
         return [];
     }
     try {
-        const snapshot = await db.collection('users').get();
+        const snapshot = await db.collection('users').where('role', '==', 'admin').get();
         if (snapshot.empty) {
             return [];
         }
         return snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() })) as any[];
     } catch(error) {
-        console.error(`Error fetching users:`, error);
+        console.error(`Error fetching admin users:`, error);
+        // Firebase often suggests an index creation URL in the error message.
+        // It's helpful to log the full error for debugging.
+        console.error("Full error object:", JSON.stringify(error, null, 2));
         return [];
     }
 }

@@ -287,7 +287,7 @@ export default function DashboardClient(props: DashboardClientProps) {
 
     // --- Component: Settings Tab ---
     const SettingsTab = () => {
-        const admins = props.users.filter(u => u.role === 'admin');
+        const admins = props.users; // No need to filter, props.users is now only admins
         return (
             <div className="space-y-8 max-w-2xl">
                 <Card>
@@ -305,7 +305,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                         <Table>
                             <TableHeader><TableRow><TableHead>Email</TableHead><TableHead className="text-right">Action</TableHead></TableRow></TableHeader>
                             <TableBody>
-                                {admins.map(admin => (
+                                {admins.length > 0 ? admins.map(admin => (
                                     <TableRow key={admin.uid}>
                                         <TableCell>{admin.email}</TableCell>
                                         <TableCell className="text-right">
@@ -323,7 +323,9 @@ export default function DashboardClient(props: DashboardClientProps) {
                                             </Button>
                                         </TableCell>
                                     </TableRow>
-                                ))}
+                                )) : (
+                                     <TableRow><TableCell colSpan={2} className="text-center h-24">No admins found.</TableCell></TableRow>
+                                )}
                             </TableBody>
                         </Table>
                         <p className="text-sm text-muted-foreground mt-4">To add a new admin, have them sign up as a student first, then manually change their role to 'admin' in the Firestore database.</p>
@@ -394,6 +396,3 @@ declare global {
         msSaveBlob?: (blob: any, defaultName?: string) => boolean
     }
 }
-
-    
-    
