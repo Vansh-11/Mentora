@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ShieldAlert, HeartPulse, Siren, MessageSquareQuestion, Trash2, CheckCircle, Circle, FileDown, ArrowLeft, MoreHorizontal, Users, LogOut, Settings as SettingsIcon } from 'lucide-react';
+import { ShieldAlert, HeartPulse, Siren, MessageSquareQuote, Trash2, CheckCircle, Circle, FileDown, ArrowLeft, MoreHorizontal, Users, LogOut, Settings as SettingsIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { updateReportStatus, deleteReport, sendPasswordReset, demoteAdmin } from '../actions';
 import { useToast } from "@/hooks/use-toast";
@@ -62,7 +62,7 @@ const reportCategories = [
     { id: 'bullying', title: 'Bullying Reports', icon: ShieldAlert, dataKey: 'bullyingReports' },
     { id: 'emotional', title: 'Emotional Health Reports', icon: HeartPulse, dataKey: 'emotionalHealthReports' },
     { id: 'incident', title: 'School Incident Reports', icon: Siren, dataKey: 'schoolIncidentReports' },
-    { id: 'other', title: 'Other Concerns', icon: MessageSquareQuestion, dataKey: 'otherConcernsReports' },
+    { id: 'other', title: 'Other Concerns', icon: MessageSquareQuote, dataKey: 'otherConcernsReports' },
 ];
 
 export default function DashboardClient(props: DashboardClientProps) {
@@ -394,3 +394,6 @@ declare global {
         msSaveBlob?: (blob: any, defaultName?: string) => boolean
     }
 }
+
+    
+    
