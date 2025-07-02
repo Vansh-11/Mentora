@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -31,6 +32,7 @@ const formSchema = z.object({
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -41,6 +43,7 @@ export default function LoginPage() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsLoggingIn(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
@@ -62,6 +65,7 @@ export default function LoginPage() {
         title: "Login Failed",
         description: error.message || "An unexpected error occurred.",
       });
+      setIsLoggingIn(false);
     }
   }
 
@@ -104,8 +108,8 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Logging in..." : "Login"}
+              <Button type="submit" className="w-full" disabled={isLoggingIn}>
+                {isLoggingIn ? "Logging in..." : "Login"}
               </Button>
             </form>
           </Form>
