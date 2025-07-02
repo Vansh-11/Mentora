@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, type UserCredential } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -41,21 +41,12 @@ export default function SignupPage() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    let userCredential: UserCredential | undefined;
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-      const user = userCredential.user;
-
-      // Create a user document in Firestore with the default role 'student'
-      await setDoc(doc(db, 'users', user.uid), {
-        uid: user.uid,
-        email: user.email,
-        role: 'student', // Default role for all new sign-ups
-      });
-
-      toast({ title: 'Success', description: 'Your account has been created. Please log in.' });
-      router.push('/login');
+      // Step 1: Create the user in Firebase Authentication
+      userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
     } catch (error: any) {
-      console.error('Sign up failed:', error);
+      console.error('Sign up failed during auth creation:', error);
       
       let description = "An unexpected error occurred. Please try again.";
       if (error.code === 'auth/email-already-in-use') {
@@ -69,6 +60,31 @@ export default function SignupPage() {
         title: 'Sign Up Failed',
         description: description,
       });
+      return; // Stop the function if auth creation fails
+    }
+
+    try {
+      // Step 2: If auth creation was successful, create the user document in Firestore
+      const user = userCredential.user;
+      await setDoc(doc(db, 'users', user.uid), {
+        uid: user.uid,
+        email: user.email,
+        role: 'student', // Default role for all new sign-ups
+      });
+
+      toast({ title: 'Success', description: 'Your account has been created. Please log in.' });
+      router.push('/login');
+    } catch (error: any) {
+        console.error('Sign up failed during Firestore document creation:', error);
+        // This is a critical error. The user has an auth account but no profile document.
+        toast({
+            variant: 'destructive',
+            title: 'Account Creation Incomplete',
+            description: "Your account was created, but we couldn't save your profile due to a database error. Please check Firestore permissions.",
+            duration: 10000 // Give more time to read
+        });
+        // Still redirect to login, they have an account they can use, though it will be limited.
+        router.push('/login');
     }
   }
 
