@@ -46,10 +46,16 @@ export async function POST(request: NextRequest) {
     switch (intentName) {
       // --- Event Registration Intent ---
       case 'EventRegistrationIntent':
+        // Normalize the event name to ensure consistency with dashboard data.
+        let eventName = parameters.eventName || 'General Event';
+        if (eventName.toLowerCase().includes('hackathon')) {
+            eventName = 'Coding Hackathon';
+        }
+
         const registrationData = {
           timestamp,
           intentName,
-          eventName: parameters.eventName || 'General Event',
+          eventName: eventName,
           fullName: parameters.fullName || 'Not provided',
           email: parameters.email || 'Not provided',
           classSection: parameters.classSection || 'Not provided',
