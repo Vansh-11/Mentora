@@ -1,27 +1,8 @@
 
 'use server';
 
-import * as admin from 'firebase-admin';
 import { revalidatePath } from 'next/cache';
-import { z } from 'zod';
-
-// --- Firebase Admin SDK Initialization ---
-if (!admin.apps.length) {
-  try {
-    const serviceAccountJson = process.env.FIREBASE_ADMIN_SDK_JSON;
-    if (serviceAccountJson) {
-      const serviceAccount = JSON.parse(serviceAccountJson);
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-      });
-    }
-  } catch (error: any) {
-    console.error('Firebase Admin SDK initialization error in server action:', error.stack);
-  }
-}
-
-const db = admin.apps.length ? admin.firestore() : null;
-const auth = admin.apps.length ? admin.auth() : null;
+import { db, auth } from '@/lib/firebase-admin';
 
 // Helper function to check if db is initialized
 function ensureDb() {

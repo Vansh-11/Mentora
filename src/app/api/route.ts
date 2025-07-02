@@ -1,26 +1,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import * as admin from 'firebase-admin';
-
-// --- Firebase Admin SDK Initialization ---
-if (!admin.apps.length) {
-  try {
-    const serviceAccountJson = process.env.FIREBASE_ADMIN_SDK_JSON;
-    if (serviceAccountJson) {
-      const serviceAccount = JSON.parse(serviceAccountJson);
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-      });
-      console.log('Firebase Admin SDK initialized successfully.');
-    } else {
-      console.warn('FIREBASE_ADMIN_SDK_JSON not set. Firebase Admin features will be disabled.');
-    }
-  } catch (error: any) {
-    console.error('Firebase Admin SDK initialization error:', error.stack);
-  }
-}
-
-const db = admin.apps.length ? admin.firestore() : null;
+import { db } from '@/lib/firebase-admin';
 
 // --- Helper to save data to Firestore ---
 async function saveToFirestore(collection: string, data: any) {
