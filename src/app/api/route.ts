@@ -1,3 +1,4 @@
+
 import { type NextRequest, NextResponse } from 'next/server';
 import * as admin from 'firebase-admin';
 import { db } from '@/lib/firebase-admin';
@@ -26,11 +27,11 @@ export async function POST(request: NextRequest) {
     const intentName = body.queryResult?.intent?.displayName || 'Unknown Intent';
     const parameters = body.queryResult?.parameters || {};
     const timestamp = admin.firestore.FieldValue.serverTimestamp();
-    let fulfillmentText = body.queryResult?.fulfillmentText || "Your request has been received.";
+    let fulfillmentText = "Your request has been received, but the intent was not handled by the webhook.";
 
-    // --- Handle Event Registration Intent only ---
+    // --- Handle Event Registration for Coding Hackathon only ---
     if (intentName === 'register_CH') {
-      const eventName = "Coding Hackathon"; // Hardcoded for single event
+      const eventName = "Coding Hackathon"; 
 
       const registrationData = {
         timestamp,
@@ -41,6 +42,7 @@ export async function POST(request: NextRequest) {
         contactNumber: parameters.contactNumber || 'Not provided',
         codingExperience: parameters.codingExperience || 'Not provided',
         classSection: parameters.classSection || 'Not provided',
+        rollNumber: parameters.rollNumber || 'Not provided',
       };
 
       console.log('Final Registration Payload:', registrationData);
@@ -52,16 +54,31 @@ export async function POST(request: NextRequest) {
       console.log(`Received unhandled intent: ${intentName}`);
     }
 
+    // This response structure explicitly tells Dialogflow to REPLACE any static responses.
     return NextResponse.json({
-      fulfillmentMessages: [{ text: { text: [fulfillmentText] } }],
+      fulfillment_response: {
+        messages: [{
+          text: {
+            text: [fulfillmentText],
+          },
+        }],
+        merge_behavior: 'REPLACE',
+      },
     }, { status: 200 });
 
   } catch (error: any) {
     console.error('Error in Dialogflow Webhook:', error);
+    // Even on error, we can try to send a clear message back to Dialogflow
+    const errorMessage = 'An error occurred while processing your request in the webhook. Please try again or contact support.';
     return NextResponse.json({
-      fulfillmentMessages: [
-        { text: { text: ['An error occurred while processing your request. Please try again or contact support.'] } },
-      ],
+       fulfillment_response: {
+        messages: [{
+          text: {
+            text: [errorMessage],
+          },
+        }],
+        merge_behavior: 'REPLACE',
+      },
     }, { status: 500 });
   }
 }
