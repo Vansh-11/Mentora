@@ -3,6 +3,8 @@ import DashboardClient from './DashboardClient';
 import type { Metadata } from 'next';
 import { db } from '@/lib/firebase-admin';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
     title: 'Admin Dashboard | Mentora Hub',
 };
