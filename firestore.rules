@@ -1,0 +1,35 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if the requesting user is an admin.
+    // It reads the user's document from the 'users' collection.
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Rules for the 'users' collection.
+    match /users/{userId} {
+      // Allow a user to create their own document upon signing up.
+      allow create: if request.auth.uid == userId;
+      // Allow a user to read or update their own data.
+      // Also allow an admin to read any user's data.
+      allow read, update: if request.auth.uid == userId || isAdmin();
+    }
+
+    // Rules for the 'registrations' collection.
+    // Only admins are allowed to read or write to this collection from the client.
+    // Webhooks using the Admin SDK will bypass these rules.
+    match /registrations/{docId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Rules for the 'reports' collection.
+    // Only admins are allowed to read or write to this collection from the client.
+    match /reports/{docId} {
+      allow read, write: if isAdmin();
+    }
+  }
+}
