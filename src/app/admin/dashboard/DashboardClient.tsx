@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useTransition } from 'react';
@@ -163,7 +164,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                   <TableCell className="text-right">
                     <Dialog>
                       <DialogTrigger asChild>
-                        <Button variant="outline" disabled={event.registrations.length === 0}>
+                        <Button variant="outline">
                           View Registrations
                         </Button>
                       </DialogTrigger>
