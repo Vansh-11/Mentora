@@ -4,7 +4,7 @@ import Footer from '@/components/mentora/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
 import Link from 'next/link';
-import { NotebookPen, CalendarDays, Shield, ShieldCheck } from 'lucide-react';
+import { NotebookPen, CalendarDays, Shield, ShieldCheck, Megaphone } from 'lucide-react';
 
 interface CardData {
   href: string;
@@ -43,6 +43,12 @@ const cardData: CardData[] = [
     title: 'Cyber Security Help',
     description: 'Get help with online safety, scams, and protecting your digital identity.',
     icon: ShieldCheck,
+  },
+  {
+    href: '/report-an-issue',
+    title: 'Report an Issue',
+    description: 'Confidential reporting for bullying, mental health concerns, or other school incidents.',
+    icon: Megaphone,
   },
 ];
 
