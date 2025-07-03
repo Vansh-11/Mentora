@@ -124,36 +124,16 @@ export default function DashboardClient(props: DashboardClientProps) {
     const unsubscribeReports = onSnapshot(
       reportsQuery,
       (snapshot) => {
-        console.log('🔄 Real-time reports snapshot received.');
-        
         const reportsData = snapshot.docs.map(doc => {
           const data = doc.data();
-          
-          // Map type to category for UI display (THE FIX IS HERE)
-          const typeToCategory = {
-            'bullying': 'Bullying Reports',
-            'mental_health': 'Mental Health Reports', 
-            'incident': 'School Incidents',
-            'other': 'Other Issues'
-          };
-          
-          const processedReport = {
+          return {
             id: doc.id,
             ...data,
             timestamp: data.timestamp?.toDate?.() ?
                 data.timestamp.toDate().toISOString() :
                 (data.timestamp || new Date().toISOString()),
-            type: data.type || 'other',
-            category: typeToCategory[data.type as keyof typeof typeToCategory] || 'Other Issues',
-            name: data.name || 'Anonymous',
-            classSection: data.classSection || 'N/A',
-            description: data.description || 'No description provided.',
           } as Report;
-
-          return processedReport;
         });
-        
-        console.log('✅ Processed and setting', reportsData.length, 'reports to state.');
         setReports(reportsData);
       },
       (error) => {
@@ -567,7 +547,7 @@ export default function DashboardClient(props: DashboardClientProps) {
       </TabsContent>
       <TabsContent value="settings" className="mt-6">
         <SettingsTab />
-      </TabsContent>
+      </Tabs.Content>
     </Tabs>
   );
 }
