@@ -37,7 +37,8 @@ interface User {
 interface Report {
     id: string;
     timestamp: string;
-    category: string;
+    type: string; 
+    category: string; 
     name: string;
     classSection: string;
     description: string;
@@ -59,7 +60,6 @@ export default function DashboardClient(props: DashboardClientProps) {
   const { toast } = useToast();
   const { user: adminUser } = useAuth();
 
-  // Real-time listener for registrations
   useEffect(() => {
     if (!adminUser) return;
 
@@ -124,20 +124,36 @@ export default function DashboardClient(props: DashboardClientProps) {
     const unsubscribeReports = onSnapshot(
       reportsQuery,
       (snapshot) => {
+        console.log('🔄 Real-time reports snapshot received.');
+        
         const reportsData = snapshot.docs.map(doc => {
           const data = doc.data();
-          return {
+          
+          // Map type to category for UI display (THE FIX IS HERE)
+          const typeToCategory = {
+            'bullying': 'Bullying Reports',
+            'mental_health': 'Mental Health Reports', 
+            'incident': 'School Incidents',
+            'other': 'Other Issues'
+          };
+          
+          const processedReport = {
             id: doc.id,
             ...data,
             timestamp: data.timestamp?.toDate?.() ?
                 data.timestamp.toDate().toISOString() :
                 (data.timestamp || new Date().toISOString()),
+            type: data.type || 'other',
+            category: typeToCategory[data.type as keyof typeof typeToCategory] || 'Other Issues',
             name: data.name || 'Anonymous',
             classSection: data.classSection || 'N/A',
             description: data.description || 'No description provided.',
-            category: data.category || 'Other Issues',
           } as Report;
+
+          return processedReport;
         });
+        
+        console.log('✅ Processed and setting', reportsData.length, 'reports to state.');
         setReports(reportsData);
       },
       (error) => {
@@ -350,6 +366,7 @@ export default function DashboardClient(props: DashboardClientProps) {
 
     if (selectedCategory) {
         const categoryData = reportCategories.find(c => c.name === selectedCategory);
+        
         const filteredReports = reports
             .filter(report => report.category === selectedCategory)
             .filter(report => 
@@ -447,6 +464,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                 {reportCategories.map(category => {
                     const Icon = category.icon;
                     const count = reports.filter(r => r.category === category.name).length;
+                    
                     return (
                         <Card key={category.name} className="hover:shadow-xl transition-shadow cursor-pointer flex flex-col" onClick={() => setSelectedCategory(category.name)}>
                             <CardHeader>
@@ -466,7 +484,6 @@ export default function DashboardClient(props: DashboardClientProps) {
         </div>
     );
   };
-
 
   const SettingsTab = () => {
     return (
@@ -564,3 +581,5 @@ declare global {
     msSaveBlob?: (blob: any, defaultName?: string) => boolean
   }
 }
+
+    
