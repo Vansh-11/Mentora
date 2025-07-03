@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -215,7 +216,7 @@ export default function MentalHealthPage() {
           </div>
           <div>
             <Image
-              src="/mental-health.jpg"
+              src="/mental-health.png"
               alt="Calm illustration representing mental well-being"
               width={600}
               height={450}

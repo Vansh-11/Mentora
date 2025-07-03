@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -214,7 +215,7 @@ export default function BullyingHelpPage() {
           </div>
           <div>
             <Image
-              src="/bullying-help.jpg"
+              src="/bullying-help.png"
               alt="Illustration of a supportive friend comforting another"
               width={600}
               height={450}

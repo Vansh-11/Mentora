@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -233,7 +234,7 @@ export default function HomeworkHelpPage() {
           </div>
            <div>
             <Image
-              src="/homework-help.jpg"
+              src="/homework-help.png"
               alt="Student studying or books and learning materials"
               width={600}
               height={450}

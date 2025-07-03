@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -232,7 +233,7 @@ export default function ActivitiesPage() {
           </div>
           <div>
             <Image
-              src="/activities.jpg"
+              src="/activities.png"
               alt="Illustration of school events or calendar"
               width={600}
               height={450}
