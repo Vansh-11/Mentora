@@ -211,7 +211,7 @@ export default function ReportAnIssuePage() {
           </div>
           <div>
             <Image
-              src="/report-an-issue.png"
+              src="/report-an-issue.jpg"
               alt="Illustration of a confidential letter or secure communication"
               width={600}
               height={450}

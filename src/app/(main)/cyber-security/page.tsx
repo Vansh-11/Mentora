@@ -215,7 +215,7 @@ export default function CyberSecurityHelpPage() {
           </div>
           <div>
             <Image
-              src="/cyber-security.png"
+              src="/cyber-security.webp"
               alt="Illustration of a person using a laptop with a security shield"
               width={600}
               height={450}

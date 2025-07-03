@@ -216,7 +216,7 @@ export default function MentalHealthPage() {
           </div>
           <div>
             <Image
-              src="/mental-health.png"
+              src="/mental-health.jpg"
               alt="Calm illustration representing mental well-being"
               width={600}
               height={450}
