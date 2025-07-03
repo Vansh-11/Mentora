@@ -28,6 +28,18 @@ async function saveToFirestore(collection: string, data: any) {
   }
 }
 
+// --- Helper to extract report type from intent name ---
+function getReportType(intentName: string): string {
+  const typeMap: { [key: string]: string } = {
+    'report_bullying': 'bullying',
+    'report_mental_health': 'mental_health',
+    'report_incident': 'incident',
+    'report_other': 'other'
+  };
+  
+  return typeMap[intentName] || 'other';
+}
+
 export async function POST(request: NextRequest) {
   console.log('🚀 WEBHOOK CALLED - Starting processing');
   console.log('Timestamp:', new Date().toISOString());
@@ -42,6 +54,7 @@ export async function POST(request: NextRequest) {
     console.log('🎯 Intent:', intentName);
     console.log('📋 Parameters:', JSON.stringify(parameters, null, 2));
     
+    // --- Handle Registration Intent ---
     if (intentName === 'register_CH') {
       console.log('✅ Processing registration...');
       
@@ -106,6 +119,98 @@ export async function POST(request: NextRequest) {
           }]
         });
       }
+    }
+    
+    // --- Handle Report Intents ---
+    if (intentName && ['report_bullying', 'report_mental_health', 'report_incident', 'report_other'].includes(intentName)) {
+      console.log('🚨 Processing report intent:', intentName);
+      
+      const name = parameters.name || 'Anonymous';
+      const classSection = parameters.classSection || 'Not provided';
+      const description = parameters.description || 'No description provided';
+      const confirmation = parameters.confirmation || 'Not provided';
+      
+      console.log('📋 Report Data:', {
+        name,
+        classSection,
+        description,
+        confirmation,
+        intentName
+      });
+      
+      // Check confirmation status
+      if (confirmation === 'no') {
+        console.log('⚠️ User declined confirmation - sending warning');
+        const warningText = "Please do not misuse the reporting system. False reports are not tolerated.";
+        
+        return NextResponse.json({
+          fulfillmentText: warningText,
+          fulfillmentMessages: [{
+            text: { text: [warningText] }
+          }]
+        });
+      }
+      
+      if (confirmation === 'yes') {
+        console.log('✅ User confirmed - proceeding with report submission');
+        
+        // Extract report type from intent name
+        const reportType = getReportType(intentName);
+        console.log('📊 Report type:', reportType);
+        
+        // Prepare data for Firestore with consistent field names
+        const reportData = {
+          type: reportType,
+          name,
+          classSection,
+          description,
+          confirmation: 'yes',
+          timestamp: admin.firestore.FieldValue.serverTimestamp()
+        };
+        
+        // Save to Firebase
+        console.log('🔄 Starting report save operation...');
+        try {
+          const docId = await saveToFirestore('reports', reportData);
+          console.log('✅ REPORT SAVED with ID:', docId);
+          console.log('🎉 Report save completed successfully');
+          
+          const successText = "✅ Your report has been submitted to the school administration. Thank you for speaking up.";
+          console.log('📤 Sending success response:', successText);
+          
+          return NextResponse.json({
+            fulfillmentText: successText,
+            fulfillmentMessages: [{
+              text: { text: [successText] }
+            }]
+          });
+          
+        } catch (saveError) {
+          console.error('❌ REPORT SAVE FAILED:', saveError);
+          console.error('❌ Error type:', typeof saveError);
+          console.error('❌ Error stack:', (saveError as any)?.stack);
+          
+          const errorText = "⚠️ There was a problem saving your report. Please try again later or contact support.";
+          console.log('📤 Sending error response:', errorText);
+          
+          return NextResponse.json({
+            fulfillmentText: errorText,
+            fulfillmentMessages: [{
+              text: { text: [errorText] }
+            }]
+          });
+        }
+      }
+      
+      // If confirmation is neither 'yes' nor 'no', ask for clarification
+      const clarificationText = "Please confirm if you want to submit this report by saying 'yes' or 'no'.";
+      
+      return NextResponse.json({
+        fulfillmentText: clarificationText,
+        fulfillmentMessages: [{
+          text: { text: [clarificationText] }
+        }]
+      });
     }
     
     // Default response for other intents
