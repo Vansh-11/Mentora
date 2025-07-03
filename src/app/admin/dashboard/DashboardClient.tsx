@@ -1,33 +1,21 @@
-
 "use client";
 
 import React, { useState, useTransition } from 'react';
+import Link from 'next/link';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { FileDown } from 'lucide-react';
-import { format } from 'date-fns';
 import { sendPasswordReset, demoteAdmin } from '../actions';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/contexts/AuthContext';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import papaparse from 'papaparse';
 
 interface Registration {
   id: string;
   timestamp: string;
   eventName?: string;
-  fullName?: string;
-  email?: string;
-  classSection?: string;
-  rollNumber?: string;
-  contactNumber?: string;
-  codingExperience?: string;
   [key: string]: any;
 }
 
@@ -56,37 +44,6 @@ export default function DashboardClient(props: DashboardClientProps) {
         variant: result.success ? "default" : "destructive",
       });
     });
-  };
-
-  const exportToPDF = (data: any[], title: string, headers: string[], bodyKeys: string[]) => {
-    const doc = new jsPDF();
-    doc.text(title, 14, 15);
-    (doc as any).autoTable({
-      head: [headers],
-      body: data.map(item =>
-        bodyKeys.map(key => key === 'timestamp'
-          ? format(new Date(item[key]), "PPp")
-          : item[key] ?? 'N/A'
-        )
-      ),
-      startY: 20,
-    });
-    doc.save(`${title.replace(/ /g, '_')}_export.pdf`);
-  };
-
-  const exportToCSV = (data: any[], title: string) => {
-    const processedData = data.map(item => ({
-      ...item,
-      timestamp: format(new Date(item.timestamp), "yyyy-MM-dd HH:mm:ss")
-    }));
-    const csv = papaparse.unparse(processedData);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.setAttribute('download', `${title.replace(/ /g, '_')}_export.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   const EventsTab = () => {
@@ -162,73 +119,11 @@ export default function DashboardClient(props: DashboardClientProps) {
                   <TableCell>{event.date}</TableCell>
                   <TableCell>{event.registrations.length}</TableCell>
                   <TableCell className="text-right">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline">
-                          View Registrations
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-6xl">
-                        <DialogHeader>
-                          <DialogTitle>Registrations for: {event.name}</DialogTitle>
-                        </DialogHeader>
-                        <div className="flex items-center gap-4 my-4">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="outline" className="ml-auto" disabled={event.registrations.length === 0}>
-                                <FileDown className="h-4 w-4 mr-2" />Export
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                              <DropdownMenuItem onClick={() =>
-                                exportToPDF(
-                                  event.registrations,
-                                  event.name,
-                                  ['Name', 'Email', 'Class', 'Roll No.', 'Contact', 'Coding Exp.', 'Registered On'],
-                                  ['fullName', 'email', 'classSection', 'rollNumber', 'contactNumber', 'codingExperience', 'timestamp']
-                                )}>
-                                Export as PDF
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => exportToCSV(event.registrations, event.name)}>
-                                Export as CSV
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                        <div className="border rounded-lg max-h-[60vh] overflow-y-auto">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Email</TableHead>
-                                <TableHead>Class</TableHead>
-                                <TableHead>Roll No.</TableHead>
-                                <TableHead>Contact</TableHead>
-                                <TableHead>Coding Exp.</TableHead>
-                                <TableHead>Registered On</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {event.registrations.length > 0 ? event.registrations.map(reg => (
-                                <TableRow key={reg.id}>
-                                  <TableCell>{reg.fullName}</TableCell>
-                                  <TableCell>{reg.email}</TableCell>
-                                  <TableCell>{reg.classSection}</TableCell>
-                                  <TableCell>{reg.rollNumber}</TableCell>
-                                  <TableCell>{reg.contactNumber}</TableCell>
-                                  <TableCell>{reg.codingExperience}</TableCell>
-                                  <TableCell>{format(new Date(reg.timestamp), "PPp")}</TableCell>
-                                </TableRow>
-                              )) : (
-                                <TableRow>
-                                  <TableCell colSpan={7} className="h-24 text-center">No registrations for this event yet.</TableCell>
-                                </TableRow>
-                              )}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                    <Button asChild variant="outline">
+                      <Link href={`/admin/registrations/${encodeURIComponent(event.name)}`}>
+                        View Registrations
+                      </Link>
+                    </Button>
                   </TableCell>
                 </TableRow>
               )) : (
@@ -323,14 +218,4 @@ export default function DashboardClient(props: DashboardClientProps) {
       </TabsContent>
     </Tabs>
   );
-}
-
-// Add this to your global types or a dedicated types file if you have one
-declare global {
-  interface Document {
-    fonts: any;
-  }
-  interface Navigator {
-    msSaveBlob?: (blob: any, defaultName?: string) => boolean
-  }
 }
