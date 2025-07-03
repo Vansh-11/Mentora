@@ -234,7 +234,7 @@ export default function HomeworkHelpPage() {
           </div>
            <div>
             <Image
-              src="/homework-help.jpg"
+              src="/homework.jpg"
               alt="Student studying or books and learning materials"
               width={600}
               height={450}

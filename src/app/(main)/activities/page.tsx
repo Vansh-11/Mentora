@@ -233,7 +233,7 @@ export default function ActivitiesPage() {
           </div>
           <div>
             <Image
-              src="/activities.jpg"
+              src="/event.jpg"
               alt="Illustration of school events or calendar"
               width={600}
               height={450}

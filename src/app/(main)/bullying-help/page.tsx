@@ -215,7 +215,7 @@ export default function BullyingHelpPage() {
           </div>
           <div>
             <Image
-              src="/bullying-help.png"
+              src="/bully.png"
               alt="Illustration of a supportive friend comforting another"
               width={600}
               height={450}

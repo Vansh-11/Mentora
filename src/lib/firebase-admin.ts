@@ -1,24 +1,18 @@
 
 import * as admin from 'firebase-admin';
 
-function initializeFirebaseAdmin() {
-  if (admin.apps.length > 0) {
-    console.log("Firebase Admin SDK already initialized.");
-    return;
-  }
-
-  // This is a bit of a hack. The initialization will fail in a deployed environment
-  // if service account is provided, and fail in a local environment if it's not.
-  // This structure tries the deployed-first approach, then falls back to local.
-  try {
-    // This will work in App Hosting environments with default credentials
+// Prevent re-initialization of the app
+if (!admin.apps.length) {
+  // When deployed to a Google Cloud environment (like App Hosting),
+  // GCLOUD_PROJECT is automatically set.
+  if (process.env.GCLOUD_PROJECT) {
     admin.initializeApp();
-    console.log("Firebase Admin SDK initialized successfully with default credentials.");
-  } catch (error) {
-    // This is the fallback for local development
-    console.log("Default credential initialization failed, trying hardcoded service account for local dev.");
+    console.log("Firebase Admin SDK initialized using Application Default Credentials (production).");
+  } else {
+    // When running locally, use the hardcoded service account.
+    console.log("No GCLOUD_PROJECT env var found, initializing with hardcoded service account (local).");
     try {
-        const serviceAccount = {
+      const serviceAccount = {
             "type": "service_account",
             "project_id": "mentora-462812",
             "private_key_id": "72620b46bdaa82b47272945a6ab492735fb13ed5",
@@ -30,33 +24,30 @@ function initializeFirebaseAdmin() {
             "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
             "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40mentora-462812.iam.gserviceaccount.com",
             "universe_domain": "googleapis.com"
-        };
-
-      // The private_key must have newlines correctly formatted to be parsed.
+      };
+      
+      // The private_key must have newlines correctly formatted to be parsed from a string.
       serviceAccount.private_key = (serviceAccount.private_key || '').replace(/\\n/g, '\n');
 
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
         projectId: serviceAccount.project_id,
       });
-      console.log("Firebase Admin SDK initialized successfully with hardcoded service account.");
-    } catch (error) {
-      console.error("CRITICAL: Service account initialization failed for local development.", error);
+      console.log("Firebase Admin SDK initialized successfully using hardcoded service account.");
+    } catch (e) {
+      console.error("CRITICAL: Failed to initialize Firebase Admin SDK for local development.", e);
     }
   }
 }
 
-// Initialize the app
-initializeFirebaseAdmin();
-
-// Export the initialized services, ensuring they are not null.
+// Export the initialized services. Using a null check for safety.
 export const db = admin.apps.length > 0 ? admin.firestore() : null;
 export const auth = admin.apps.length > 0 ? admin.auth() : null;
 
-// Add a check to log if services are null for easier debugging
+// Log an error if services are still not available after initialization.
 if (!db) {
-  console.error("Firestore (db) instance is null. Check initialization logs.");
+  console.error("Firestore (db) instance is null after initialization attempt. Check server logs for errors.");
 }
 if (!auth) {
-  console.error("Auth instance is null. Check initialization logs.");
+  console.error("Auth instance is null after initialization attempt. Check server logs for errors.");
 }
