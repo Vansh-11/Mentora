@@ -77,86 +77,88 @@ export default function RegistrationDetailsClient({ eventName, registrations }: 
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <Link href="/admin/dashboard" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Dashboard
+    <div>
+        <div className="flex justify-between items-center mb-4">
+            <Link href="/admin/dashboard">
+                <Button variant="outline">
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to Dashboard
+                </Button>
             </Link>
+            <div className="flex items-center gap-2">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" disabled={filteredRegistrations.length === 0}>
+                        <FileDown className="h-4 w-4 mr-2" />Export
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        <DropdownMenuItem onClick={exportToPDF}>
+                        Export as PDF
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={exportToCSV}>
+                        Export as CSV
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
+        </div>
+        <Card>
+        <CardHeader>
             <CardTitle className="text-2xl">Registrations for: {eventName}</CardTitle>
             <CardDescription>
-              {registrations.length} registration(s) found for this event.
+                {registrations.length} registration(s) found for this event.
             </CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" disabled={filteredRegistrations.length === 0}>
-                  <FileDown className="h-4 w-4 mr-2" />Export
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={exportToPDF}>
-                  Export as PDF
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={exportToCSV}>
-                  Export as CSV
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Input
-            placeholder="Search registrations..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-sm mb-4"
-        />
-        <div className="border rounded-lg">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Class</TableHead>
-                <TableHead>Roll No.</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Coding Exp.</TableHead>
-                <TableHead>Registered On</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {registrations.length === 0 ? (
-                 <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">
-                    No registrations for this event yet.
-                  </TableCell>
-                </TableRow>
-              ) : filteredRegistrations.length > 0 ? filteredRegistrations.map(reg => (
-                <TableRow key={reg.id}>
-                  <TableCell>{reg.fullName}</TableCell>
-                  <TableCell>{reg.email}</TableCell>
-                  <TableCell>{reg.classSection}</TableCell>
-                  <TableCell>{reg.rollNumber}</TableCell>
-                  <TableCell>{reg.contactNumber}</TableCell>
-                  <TableCell>{reg.codingExperience}</TableCell>
-                  <TableCell>{format(new Date(reg.timestamp), "PPp")}</TableCell>
-                </TableRow>
-              )) : (
+        </CardHeader>
+        <CardContent>
+            <Input
+                placeholder="Search registrations..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="max-w-sm mb-4"
+            />
+            <div className="border rounded-lg">
+            <Table>
+                <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">
-                    No registrations found matching your search.
-                  </TableCell>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Class</TableHead>
+                    <TableHead>Roll No.</TableHead>
+                    <TableHead>Contact</TableHead>
+                    <TableHead>Coding Exp.</TableHead>
+                    <TableHead>Registered On</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+                </TableHeader>
+                <TableBody>
+                {registrations.length === 0 ? (
+                    <TableRow>
+                    <TableCell colSpan={7} className="h-24 text-center">
+                        No registrations for this event yet.
+                    </TableCell>
+                    </TableRow>
+                ) : filteredRegistrations.length > 0 ? filteredRegistrations.map(reg => (
+                    <TableRow key={reg.id}>
+                    <TableCell>{reg.fullName}</TableCell>
+                    <TableCell>{reg.email}</TableCell>
+                    <TableCell>{reg.classSection}</TableCell>
+                    <TableCell>{reg.rollNumber}</TableCell>
+                    <TableCell>{reg.contactNumber}</TableCell>
+                    <TableCell>{reg.codingExperience}</TableCell>
+                    <TableCell>{format(new Date(reg.timestamp), "PPp")}</TableCell>
+                    </TableRow>
+                )) : (
+                    <TableRow>
+                    <TableCell colSpan={7} className="h-24 text-center">
+                        No registrations found matching your search.
+                    </TableCell>
+                    </TableRow>
+                )}
+                </TableBody>
+            </Table>
+            </div>
+        </CardContent>
+        </Card>
+    </div>
   );
 }
