@@ -405,7 +405,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="max-w-sm mb-4"
                           />
-                        <div className="border rounded-lg max-h-[60vh] overflow-y-auto">
+                        <div className="border rounded-lg">
                             <Table>
                                 <TableHeader>
                                     <TableRow>

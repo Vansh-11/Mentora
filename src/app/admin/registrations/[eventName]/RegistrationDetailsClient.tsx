@@ -1,6 +1,7 @@
+
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -11,6 +12,7 @@ import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import papaparse from 'papaparse';
+import { Input } from '@/components/ui/input';
 
 interface Registration {
   id: string;
@@ -31,12 +33,21 @@ interface RegistrationDetailsClientProps {
 }
 
 export default function RegistrationDetailsClient({ eventName, registrations }: RegistrationDetailsClientProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredRegistrations = registrations.filter(reg =>
+    (reg.fullName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (reg.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (reg.classSection?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (reg.rollNumber?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+  );
+
   const exportToPDF = () => {
     const doc = new jsPDF();
     doc.text(`Registrations for: ${eventName}`, 14, 15);
     (doc as any).autoTable({
       head: [['Name', 'Email', 'Class', 'Roll No.', 'Contact', 'Coding Exp.', 'Registered On']],
-      body: registrations.map(reg => [
+      body: filteredRegistrations.map(reg => [
         reg.fullName ?? 'N/A',
         reg.email ?? 'N/A',
         reg.classSection ?? 'N/A',
@@ -51,7 +62,7 @@ export default function RegistrationDetailsClient({ eventName, registrations }: 
   };
 
   const exportToCSV = () => {
-    const processedData = registrations.map(reg => ({
+    const processedData = filteredRegistrations.map(reg => ({
       ...reg,
       timestamp: format(new Date(reg.timestamp), "yyyy-MM-dd HH:mm:ss")
     }));
@@ -82,7 +93,7 @@ export default function RegistrationDetailsClient({ eventName, registrations }: 
           <div className="flex items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" disabled={registrations.length === 0}>
+                <Button variant="outline" disabled={filteredRegistrations.length === 0}>
                   <FileDown className="h-4 w-4 mr-2" />Export
                 </Button>
               </DropdownMenuTrigger>
@@ -99,6 +110,12 @@ export default function RegistrationDetailsClient({ eventName, registrations }: 
         </div>
       </CardHeader>
       <CardContent>
+        <Input
+            placeholder="Search registrations..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-sm mb-4"
+        />
         <div className="border rounded-lg">
           <Table>
             <TableHeader>
@@ -113,7 +130,13 @@ export default function RegistrationDetailsClient({ eventName, registrations }: 
               </TableRow>
             </TableHeader>
             <TableBody>
-              {registrations.length > 0 ? registrations.map(reg => (
+              {registrations.length === 0 ? (
+                 <TableRow>
+                  <TableCell colSpan={7} className="h-24 text-center">
+                    No registrations for this event yet.
+                  </TableCell>
+                </TableRow>
+              ) : filteredRegistrations.length > 0 ? filteredRegistrations.map(reg => (
                 <TableRow key={reg.id}>
                   <TableCell>{reg.fullName}</TableCell>
                   <TableCell>{reg.email}</TableCell>
@@ -126,7 +149,7 @@ export default function RegistrationDetailsClient({ eventName, registrations }: 
               )) : (
                 <TableRow>
                   <TableCell colSpan={7} className="h-24 text-center">
-                    No registrations for this event yet.
+                    No registrations found matching your search.
                   </TableCell>
                 </TableRow>
               )}
