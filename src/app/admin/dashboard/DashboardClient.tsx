@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useTransition, useEffect } from 'react';
@@ -37,8 +36,8 @@ interface User {
 interface Report {
     id: string;
     timestamp: string;
-    type: string; 
-    category: string; 
+    type: string; // This matches your Firestore field
+    category: string; // This is computed for UI display
     name: string;
     classSection: string;
     description: string;
@@ -60,6 +59,7 @@ export default function DashboardClient(props: DashboardClientProps) {
   const { toast } = useToast();
   const { user: adminUser } = useAuth();
 
+  // Real-time listener for registrations
   useEffect(() => {
     if (!adminUser) return;
 
@@ -124,16 +124,38 @@ export default function DashboardClient(props: DashboardClientProps) {
     const unsubscribeReports = onSnapshot(
       reportsQuery,
       (snapshot) => {
+        console.log('🔄 Reports snapshot received, doc count:', snapshot.docs.length);
+        
         const reportsData = snapshot.docs.map(doc => {
           const data = doc.data();
-          return {
+          console.log('Raw report data:', data);
+          
+          // Map type to category for UI display
+          const typeToCategory = {
+            'bullying': 'Bullying Reports',
+            'mental_health': 'Mental Health Reports', 
+            'incident': 'School Incidents',
+            'other': 'Other Issues'
+          };
+          
+          const processedReport = {
             id: doc.id,
             ...data,
             timestamp: data.timestamp?.toDate?.() ?
                 data.timestamp.toDate().toISOString() :
                 (data.timestamp || new Date().toISOString()),
+            type: data.type || 'other',
+            category: typeToCategory[data.type as keyof typeof typeToCategory] || 'Other Issues',
+            name: data.name || 'Anonymous',
+            classSection: data.classSection || 'N/A',
+            description: data.description || 'No description provided.',
           } as Report;
+          
+          console.log('Processed report:', processedReport);
+          return processedReport;
         });
+        
+        console.log('✅ Setting reports state with', reportsData.length, 'reports');
         setReports(reportsData);
       },
       (error) => {
@@ -209,7 +231,9 @@ export default function DashboardClient(props: DashboardClientProps) {
 
   const EventsTab = () => {
     const [eventSearch, setEventSearch] = useState("");
-
+    const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
+    const [registrationSearch, setRegistrationSearch] = useState("");
+  
     const staticEvents = [
       {
         name: 'Coding Hackathon',
@@ -217,7 +241,8 @@ export default function DashboardClient(props: DashboardClientProps) {
         description: 'The Inter-School Coding Hackathon is a thrilling event where students collaborate to solve real-world problems. Open to all coding enthusiasts, it promotes creativity, teamwork, and innovation. Prizes will be awarded to the most outstanding solutions. Do not miss it!',
       }
     ];
-
+  
+    // Group registrations by event name
     const registrationsByEvent = registrations.reduce((acc, reg) => {
       const eventName = reg.eventName || 'General Event';
       if (!acc[eventName]) {
@@ -226,12 +251,14 @@ export default function DashboardClient(props: DashboardClientProps) {
       acc[eventName].push(reg);
       return acc;
     }, {} as Record<string, Registration[]>);
-
+  
+    // Get all unique event names from both static events and registrations
     const allEventNames = [...new Set([
       ...staticEvents.map(e => e.name), 
       ...Object.keys(registrationsByEvent)
     ])];
-
+  
+    // Create events array with proper data
     const events = allEventNames.map(eventName => {
       const staticEventData = staticEvents.find(e => e.name === eventName);
       const eventRegistrations = registrationsByEvent[eventName] || [];
@@ -241,13 +268,117 @@ export default function DashboardClient(props: DashboardClientProps) {
         date: staticEventData?.date || 'N/A',
         description: staticEventData?.description || 'Details not available.',
         registrations: eventRegistrations,
+        registrationCount: eventRegistrations.length,
       };
     });
-
+  
+    // Filter events based on search
     const filteredEvents = events.filter(event => 
       event.name.toLowerCase().includes(eventSearch.toLowerCase())
     );
+  
+    console.log('🔍 EventsTab Debug:', {
+      totalRegistrations: registrations.length,
+      registrationsByEvent,
+      allEventNames,
+      events,
+      filteredEvents
+    });
 
+    // If an event is selected, show its registrations
+    if (selectedEvent) {
+      const eventData = events.find(e => e.name === selectedEvent);
+      const filteredRegistrations = eventData?.registrations.filter(reg => 
+        (reg.fullName || '').toLowerCase().includes(registrationSearch.toLowerCase()) ||
+        (reg.contactNumber || '').toLowerCase().includes(registrationSearch.toLowerCase()) ||
+        (reg.classSection || '').toLowerCase().includes(registrationSearch.toLowerCase()) ||
+        (reg.rollNumber || '').toLowerCase().includes(registrationSearch.toLowerCase())
+      ) || [];
+
+      return (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <Button variant="outline" onClick={() => { setSelectedEvent(null); setRegistrationSearch(""); }}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Events
+            </Button>
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" disabled={filteredRegistrations.length === 0}>
+                    <FileDown className="h-4 w-4 mr-2" />Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() =>
+                    exportToPDF(
+                      filteredRegistrations,
+                      `${selectedEvent} Registrations`,
+                      ['Name', 'Contact', 'Class', 'Roll No', 'Coding Experience', 'Registered On'],
+                      ['fullName', 'contactNumber', 'classSection', 'rollNumber', 'codingExperience', 'timestamp']
+                    )}>
+                    Export as PDF
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => exportToCSV(filteredRegistrations, `${selectedEvent} Registrations`)}>
+                    Export as CSV
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Registrations for: {selectedEvent}</CardTitle>
+              <CardDescription>{filteredRegistrations.length} registration(s) found for this event.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Input
+                placeholder="Search registrations..."
+                value={registrationSearch}
+                onChange={(e) => setRegistrationSearch(e.target.value)}
+                className="max-w-sm mb-4"
+              />
+              <div className="border rounded-lg">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Class</TableHead>
+                      <TableHead>Roll No.</TableHead>
+                      <TableHead>Contact</TableHead>
+                      <TableHead>Coding Exp.</TableHead>
+                      <TableHead>Registered On</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredRegistrations.length > 0 ? filteredRegistrations.map((reg) => (
+                      <TableRow key={reg.id}>
+                        <TableCell className="font-medium">{reg.fullName || 'N/A'}</TableCell>
+                        <TableCell>{reg.email || 'N/A'}</TableCell>
+                        <TableCell>{reg.classSection || 'N/A'}</TableCell>
+                        <TableCell>{reg.rollNumber || 'N/A'}</TableCell>
+                        <TableCell>{reg.contactNumber || 'N/A'}</TableCell>
+                        <TableCell>{reg.codingExperience || 'N/A'}</TableCell>
+                        <TableCell>{format(new Date(reg.timestamp), 'PPp')}</TableCell>
+                      </TableRow>
+                    )) : (
+                      <TableRow>
+                        <TableCell colSpan={7} className="h-24 text-center">
+                          {registrationSearch ? 'No registrations match your search.' : 'No registrations for this event yet.'}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+  
     return (
       <div>
         <div className="flex items-center gap-4 mb-4">
@@ -269,19 +400,31 @@ export default function DashboardClient(props: DashboardClientProps) {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Total Registrations</CardTitle></CardHeader>
-            <CardContent><div className="text-2xl font-bold">{registrations.length}</div></CardContent>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Total Registrations</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{registrations.length}</div>
+            </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Active Events</CardTitle></CardHeader>
-            <CardContent><div className="text-2xl font-bold">{allEventNames.length}</div></CardContent>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Active Events</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{allEventNames.length}</div>
+            </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Total Reports</CardTitle></CardHeader>
-            <CardContent><div className="text-2xl font-bold">{reports.length}</div></CardContent>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Total Reports</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{reports.length}</div>
+            </CardContent>
           </Card>
         </div>
-
+  
         <div className="border rounded-lg">
           <Table>
             <TableHeader>
@@ -306,25 +449,54 @@ export default function DashboardClient(props: DashboardClientProps) {
                           <CardDescription>{event.date}</CardDescription>
                         </DialogHeader>
                         <p className="py-4 text-sm text-muted-foreground">{event.description}</p>
+                        
+                        {/* Show recent registrations in dialog */}
+                        {event.registrations.length > 0 && (
+                          <div className="mt-4">
+                            <h4 className="font-medium mb-2">Recent Registrations:</h4>
+                            <div className="max-h-48 overflow-y-auto">
+                              {event.registrations.slice(0, 5).map((reg, idx) => (
+                                <div key={reg.id} className="text-sm p-2 border-b">
+                                  <div className="font-medium">{reg.fullName || 'Name not provided'}</div>
+                                  <div className="text-muted-foreground">
+                                    {reg.classSection || 'Class not provided'} | 
+                                    {reg.contactNumber || 'Contact not provided'}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {format(new Date(reg.timestamp), "PPp")}
+                                  </div>
+                                </div>
+                              ))}
+                              {event.registrations.length > 5 && (
+                                <div className="text-xs text-muted-foreground p-2">
+                                  +{event.registrations.length - 5} more registrations
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </DialogContent>
                     </Dialog>
                   </TableCell>
                   <TableCell>{event.date}</TableCell>
                   <TableCell>
-                      <span className={event.registrations.length > 0 ? "font-semibold" : ""}>
-                        {event.registrations.length}
-                      </span>
+                    <span className={event.registrationCount > 0 ? "font-semibold" : ""}>
+                      {event.registrationCount}
+                    </span>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Link href={`/admin/registrations/${encodeURIComponent(event.name)}`}>
-                        <Button variant="outline">
-                            View Registrations
-                        </Button>
-                    </Link>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setSelectedEvent(event.name)}
+                    >
+                      View Registrations
+                    </Button>
                   </TableCell>
                 </TableRow>
               )) : (
-                <TableRow><TableCell colSpan={4} className="text-center h-24">No events found.</TableCell></TableRow>
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center h-24">No events found.</TableCell>
+                </TableRow>
               )}
             </TableBody>
           </Table>
@@ -347,13 +519,19 @@ export default function DashboardClient(props: DashboardClientProps) {
     if (selectedCategory) {
         const categoryData = reportCategories.find(c => c.name === selectedCategory);
         
+        // 🔧 FIXED: Filter by category (computed field) instead of type
         const filteredReports = reports
-            .filter(report => report.category === selectedCategory)
+            .filter(report => {
+                console.log('Filtering report:', report.category, 'vs selected:', selectedCategory);
+                return report.category === selectedCategory;
+            })
             .filter(report => 
                 report.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 report.classSection.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 report.description.toLowerCase().includes(searchTerm.toLowerCase())
             );
+
+        console.log('📊 Reports for category', selectedCategory, ':', filteredReports.length);
 
         return (
             <div>
@@ -443,7 +621,9 @@ export default function DashboardClient(props: DashboardClientProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {reportCategories.map(category => {
                     const Icon = category.icon;
+                    // 🔧 FIXED: Count by category instead of type
                     const count = reports.filter(r => r.category === category.name).length;
+                    console.log('📊 Category', category.name, 'count:', count);
                     
                     return (
                         <Card key={category.name} className="hover:shadow-xl transition-shadow cursor-pointer flex flex-col" onClick={() => setSelectedCategory(category.name)}>
@@ -547,7 +727,7 @@ export default function DashboardClient(props: DashboardClientProps) {
       </TabsContent>
       <TabsContent value="settings" className="mt-6">
         <SettingsTab />
-      </Tabs.Content>
+      </TabsContent>
     </Tabs>
   );
 }
@@ -561,5 +741,3 @@ declare global {
     msSaveBlob?: (blob: any, defaultName?: string) => boolean
   }
 }
-
-    

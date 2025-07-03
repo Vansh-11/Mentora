@@ -234,9 +234,8 @@ export default function HomeworkHelpPage() {
           </div>
            <div>
             <Image 
-              src="https://placehold.co/600x450.png" 
+              src="https://images.unsplash.com/photo-1491841550275-57743fe962b3?q=80&w=600&h=450&fit=crop" 
               alt="Student studying or books and learning materials"
-              data-ai-hint="student studying books"
               width={600} 
               height={450} 
               className="rounded-lg shadow-xl mx-auto" 

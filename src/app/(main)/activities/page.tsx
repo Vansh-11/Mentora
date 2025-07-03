@@ -233,9 +233,8 @@ export default function ActivitiesPage() {
           </div>
           <div>
             <Image 
-              src="https://placehold.co/600x450.png" 
+              src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=600&h=450&fit=crop" 
               alt="Illustration of school events or calendar"
-              data-ai-hint="school events calendar"
               width={600} 
               height={450} 
               className="rounded-lg shadow-xl mx-auto" 

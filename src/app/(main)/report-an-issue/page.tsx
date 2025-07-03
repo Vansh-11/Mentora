@@ -211,9 +211,8 @@ export default function ReportAnIssuePage() {
           </div>
           <div>
             <Image 
-              src="https://placehold.co/600x450.png" 
+              src="https://images.unsplash.com/photo-1586953208448-3151cf78393a?q=80&w=600&h=450&fit=crop" 
               alt="Illustration of a confidential letter or secure communication"
-              data-ai-hint="confidential report secure"
               width={600} 
               height={450} 
               className="rounded-lg shadow-xl mx-auto" 

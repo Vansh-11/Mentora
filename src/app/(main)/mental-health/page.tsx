@@ -216,9 +216,8 @@ export default function MentalHealthPage() {
           </div>
           <div>
             <Image 
-              src="https://placehold.co/600x450.png" 
+              src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=600&h=450&fit=crop" 
               alt="Calm illustration representing mental well-being"
-              data-ai-hint="serene mind wellness"
               width={600} 
               height={450} 
               className="rounded-lg shadow-xl mx-auto" 

@@ -215,9 +215,8 @@ export default function BullyingHelpPage() {
           </div>
           <div>
             <Image 
-              src="https://placehold.co/600x450.png" 
+              src="https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?q=80&w=600&h=450&fit=crop" 
               alt="Illustration of a supportive friend comforting another"
-              data-ai-hint="supportive friend help"
               width={600} 
               height={450} 
               className="rounded-lg shadow-xl mx-auto" 
