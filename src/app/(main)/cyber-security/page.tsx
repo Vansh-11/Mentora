@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -214,12 +213,12 @@ export default function CyberSecurityHelpPage() {
             </Button>
           </div>
           <div>
-            <Image 
-              src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=600&h=450&fit=crop" 
+            <Image
+              src="/cyber-security.jpg"
               alt="Illustration of a person using a laptop with a security shield"
-              width={600} 
-              height={450} 
-              className="rounded-lg shadow-xl mx-auto" 
+              width={600}
+              height={450}
+              className="rounded-lg shadow-xl mx-auto"
             />
           </div>
         </section>

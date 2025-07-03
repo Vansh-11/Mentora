@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -214,12 +213,12 @@ export default function BullyingHelpPage() {
             </Button>
           </div>
           <div>
-            <Image 
-              src="https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?q=80&w=600&h=450&fit=crop" 
+            <Image
+              src="/bullying-help.jpg"
               alt="Illustration of a supportive friend comforting another"
-              width={600} 
-              height={450} 
-              className="rounded-lg shadow-xl mx-auto" 
+              width={600}
+              height={450}
+              className="rounded-lg shadow-xl mx-auto"
             />
           </div>
         </section>

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -210,12 +209,12 @@ export default function ReportAnIssuePage() {
             </Button>
           </div>
           <div>
-            <Image 
-              src="https://images.unsplash.com/photo-1586953208448-3151cf78393a?q=80&w=600&h=450&fit=crop" 
+            <Image
+              src="/report-an-issue.jpg"
               alt="Illustration of a confidential letter or secure communication"
-              width={600} 
-              height={450} 
-              className="rounded-lg shadow-xl mx-auto" 
+              width={600}
+              height={450}
+              className="rounded-lg shadow-xl mx-auto"
             />
           </div>
         </section>

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -233,12 +232,12 @@ export default function HomeworkHelpPage() {
             </Button>
           </div>
            <div>
-            <Image 
-              src="https://images.unsplash.com/photo-1491841550275-57743fe962b3?q=80&w=600&h=450&fit=crop" 
+            <Image
+              src="/homework-help.jpg"
               alt="Student studying or books and learning materials"
-              width={600} 
-              height={450} 
-              className="rounded-lg shadow-xl mx-auto" 
+              width={600}
+              height={450}
+              className="rounded-lg shadow-xl mx-auto"
             />
           </div>
         </section>

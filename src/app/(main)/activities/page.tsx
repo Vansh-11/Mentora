@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -232,12 +231,12 @@ export default function ActivitiesPage() {
             </Button>
           </div>
           <div>
-            <Image 
-              src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=600&h=450&fit=crop" 
+            <Image
+              src="/activities.jpg"
               alt="Illustration of school events or calendar"
-              width={600} 
-              height={450} 
-              className="rounded-lg shadow-xl mx-auto" 
+              width={600}
+              height={450}
+              className="rounded-lg shadow-xl mx-auto"
             />
           </div>
         </section>
