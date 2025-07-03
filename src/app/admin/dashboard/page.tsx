@@ -10,66 +10,123 @@ export const metadata: Metadata = {
     title: 'Admin Dashboard | Mentora Hub',
 };
 
-async function fetchCollection(collectionName: string) {
+interface Registration {
+  id: string;
+  timestamp: string;
+  [key: string]: any;
+}
+
+interface User {
+  uid: string;
+  email: string;
+  role: "admin" | "student";
+}
+
+interface Report {
+    id: string;
+    timestamp: string;
+    category: string;
+    name: string;
+    classSection: string;
+    description: string;
+}
+
+
+async function fetchInitialData() {
   noStore();
-  if (!db) {
-    console.warn(`Firestore not initialized, cannot fetch ${collectionName}.`);
-    return [];
-  }
-  try {
-    const snapshot = await db.collection(collectionName).orderBy('timestamp', 'desc').get();
-    if (snapshot.empty) {
-        return [];
-    }
-    return snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-        id: doc.id,
-        ...data,
-        timestamp: data.timestamp?.toDate().toISOString() || new Date().toISOString(),
-        };
-    });
-  } catch(error) {
-    console.error(`Error fetching collection ${collectionName}:`, error);
-    return [];
-  }
-}
+  
+  let initialRegistrations: Registration[] = [];
+  let initialUsers: User[] = [];
+  let initialReports: Report[] = [];
 
-async function fetchUsers() {
-    noStore();
-    if (!db) {
-        console.warn('Firestore not initialized, cannot fetch users.');
-        return [];
-    }
+  if (db) {
     try {
-        const snapshot = await db.collection('users').where('role', '==', 'admin').get();
-        if (snapshot.empty) {
-            return [];
-        }
-        return snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() })) as any[];
-    } catch(error) {
-        console.error(`Error fetching admin users:`, error);
-        // Firebase often suggests an index creation URL in the error message.
-        // It's helpful to log the full error for debugging.
-        console.error("Full error object:", JSON.stringify(error, null, 2));
-        return [];
-    }
-}
+      // Fetch initial registrations
+      const registrationsSnapshot = await db.collection('registrations')
+        .orderBy('timestamp', 'desc')
+        .limit(50)
+        .get();
+      
+      if (!registrationsSnapshot.empty) {
+        initialRegistrations = registrationsSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            timestamp: data.timestamp?.toDate?.() ? 
+              data.timestamp.toDate().toISOString() : 
+              (data.timestamp || new Date().toISOString()),
+          };
+        });
+      }
 
+      // Fetch initial admin users
+      const usersSnapshot = await db.collection('users')
+        .where('role', '==', 'admin')
+        .get();
+      
+      if (!usersSnapshot.empty) {
+        initialUsers = usersSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return { 
+            uid: doc.id, 
+            email: data.email as string,
+            role: data.role as "admin" | "student",
+          };
+        });
+      }
+
+      // Fetch initial reports
+      const reportsSnapshot = await db.collection('reports')
+        .orderBy('timestamp', 'desc')
+        .limit(100)
+        .get();
+
+      if (!reportsSnapshot.empty) {
+        initialReports = reportsSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                ...data,
+                timestamp: data.timestamp?.toDate?.() ? 
+                  data.timestamp.toDate().toISOString() : 
+                  (data.timestamp || new Date().toISOString()),
+                name: data.name || 'Anonymous',
+                classSection: data.classSection || 'N/A',
+                description: data.description || 'No description provided.',
+                category: data.category || 'Other Issues',
+            };
+        });
+      }
+
+      console.log('Initial data loaded:', {
+        registrations: initialRegistrations.length,
+        users: initialUsers.length,
+        reports: initialReports.length,
+      });
+
+    } catch (error) {
+      console.error('Error fetching initial data:', error);
+    }
+  } else {
+    console.warn('Firestore not initialized');
+  }
+
+  return {
+    registrations: initialRegistrations,
+    users: initialUsers,
+    reports: initialReports,
+  };
+}
 
 export default async function AdminDashboardPage() {
-  const [
-    registrations,
-    users
-    ] = await Promise.all([
-        fetchCollection('registrations'),
-        fetchUsers()
-    ]);
+  const { registrations, users, reports } = await fetchInitialData();
   
   return (
     <DashboardClient
       registrations={registrations}
       users={users}
+      reports={reports}
     />
   );
 }
