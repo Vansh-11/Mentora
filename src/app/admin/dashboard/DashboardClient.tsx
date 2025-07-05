@@ -272,9 +272,9 @@ export default function DashboardClient(props: DashboardClientProps) {
       const eventData = events.find(e => e.name === selectedEvent);
       const filteredRegistrations = eventData?.registrations.filter(reg => 
         (reg.fullName || '').toLowerCase().includes(registrationSearch.toLowerCase()) ||
-        (reg.contactNumber || '').toLowerCase().includes(registrationSearch.toLowerCase()) ||
+        `${reg.contactNumber || ""}`.toLowerCase().includes(registrationSearch.toLowerCase()) ||
         (reg.classSection || '').toLowerCase().includes(registrationSearch.toLowerCase()) ||
-        (reg.rollNumber || '').toLowerCase().includes(registrationSearch.toLowerCase())
+        `${reg.rollNumber || ''}`.toLowerCase().includes(registrationSearch.toLowerCase())
       ) || [];
 
       return (
